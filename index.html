@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Racing Angels | Landing Page</title>
+  <meta name="description" content="Landing page da equipe ficticia de corrida Racing Angels.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="home">
+  <canvas class="particles-canvas" id="particlesCanvas" aria-hidden="true"></canvas>
+
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Racing Angels">
+        <span class="brand-logo" aria-hidden="true">
+          <svg class="angel-logo" viewBox="0 0 180 108">
+            <path class="logo-halo" d="M68 17c6-9 38-9 44 0 4 6-1 13-22 13S64 23 68 17Z"></path>
+            <path class="logo-wing" d="M70 49C47 31 26 28 9 37c18 2 31 8 40 16-16-5-30-5-42 1 17 4 30 10 39 20-13-2-24-1-34 4 21 7 41 7 59-4"></path>
+            <path class="logo-wing right" d="M110 49c23-18 44-21 61-12-18 2-31 8-40 16 16-5 30-5 42 1-17 4-30 10-39 20 13-2 24-1 34 4-21 7-41 7-59-4"></path>
+            <path class="logo-letter" d="M90 31 60 88h17l5-11h16l5 11h17L90 31Zm-3 35 3-8 3 8h-6Z"></path>
+          </svg>
+        </span>
+        <span class="brand-text">RACING ANGELS</span>
+      </a>
+
+      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mainMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="main-nav" id="mainMenu" aria-label="Menu principal">
+        <a href="index.html" aria-current="page">Inicio</a>
+        <a href="equipe.html">Equipe</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="analytics.html">Analises</a>
+        <a href="pistas.html">Pistas</a>
+        <a href="grid.html">Classificacao</a>
+        <a href="loja.html">Loja</a>
+        <a href="contato.html">Contato</a>
+        <a href="login.html">Login</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="btn btn-ghost" href="login.html">Entrar</a>
+        <a class="btn btn-primary" href="loja.html">Loja</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero-section apple-reveal">
+        <div class="hero-content">
+          <div class="live-badge">
+            <span class="live-dot"></span>
+            AO VIVO
+          </div>
+          <p class="eyebrow">Equipe ficticia de corrida</p>
+          <h1>Racing Angels</h1>
+          <p class="hero-subtitle">Voando baixo. Rasgando o asfalto.</p>
+          <p class="hero-copy">
+            Uma landing page moderna, profissional e marcante, criada para traduzir velocidade,
+            tecnologia, precisao e a identidade competitiva da equipe.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary btn-large" href="dashboard.html">Ver dashboard</a>
+            <a class="btn btn-dark btn-large" href="grid.html">Ver grid</a>
+          </div>
+        </div>
+
+        <section class="dashboard-card hero-preview" aria-label="Resumo Racing Angels">
+          <div class="dashboard-topbar">
+            <div>
+              <p class="dashboard-kicker">Race Control</p>
+              <h2>Controle da corrida</h2>
+            </div>
+            <div class="status-pill">
+              <span class="live-dot"></span>
+              AO VIVO
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <article class="metric-box">
+              <span>Voltas</span>
+              <strong>42</strong>
+            </article>
+            <article class="metric-box">
+              <span>Velocidade</span>
+              <strong><span id="speedValue">0</span> km/h</strong>
+            </article>
+            <article class="metric-box">
+              <span>Melhor volta</span>
+              <strong>1:21.348</strong>
+            </article>
+            <article class="metric-box">
+              <span>Pista</span>
+              <strong>Interlagos</strong>
+            </article>
+          </div>
+
+          <div class="dashboard-main compact-dashboard">
+            <div class="speedometer" aria-label="Velocimetro animado">
+              <svg viewBox="0 0 240 150" class="speedometer-svg" aria-hidden="true">
+                <path class="speed-track" d="M35 125a85 85 0 0 1 170 0"></path>
+                <path class="speed-progress" id="speedProgress" d="M35 125a85 85 0 0 1 170 0"></path>
+                <g class="speed-ticks">
+                  <line x1="35" y1="125" x2="49" y2="125"></line>
+                  <line x1="54" y1="74" x2="66" y2="82"></line>
+                  <line x1="120" y1="40" x2="120" y2="55"></line>
+                  <line x1="186" y1="74" x2="174" y2="82"></line>
+                  <line x1="205" y1="125" x2="191" y2="125"></line>
+                </g>
+                <g class="needle">
+                  <line id="speedNeedle" x1="120" y1="125" x2="52" y2="125"></line>
+                  <circle cx="120" cy="125" r="9"></circle>
+                </g>
+              </svg>
+              <div class="speed-readout">
+                <span id="speedReadout">0</span>
+                <small>km/h</small>
+              </div>
+            </div>
+
+            <div class="race-data">
+              <div class="gear-display">
+                <span>Marcha</span>
+                <strong>7</strong>
+              </div>
+              <div class="data-list">
+                <p><span>API REST</span><strong class="online">Ativo</strong></p>
+                <p><span>WebSocket</span><strong class="online">Conectado</strong></p>
+                <p><span>Equipe</span><strong>Racing Angels</strong></p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="story-section">
+        <article class="story-step texture-panel apple-reveal">
+          <p class="eyebrow">Proposta</p>
+          <h2>Uma marca feita para acelerar</h2>
+          <p>
+            A proposta do projeto foi criar uma pagina moderna, profissional e marcante,
+            capaz de transmitir a forca visual e a identidade competitiva da Racing Angels.
+          </p>
+        </article>
+
+        <article class="story-step texture-panel apple-reveal">
+          <p class="eyebrow">Identidade</p>
+          <h2>Amarelo, preto e impacto</h2>
+          <p>
+            O amarelo representa energia, destaque e movimento. O preto traz elegancia,
+            autoridade e um visual tecnico. Juntas, as cores criam contraste forte e moderno.
+          </p>
+        </article>
+
+        <article class="story-step texture-panel apple-reveal">
+          <p class="eyebrow">Missao</p>
+          <h2>Precisao, inovacao e dominio</h2>
+          <p>
+            A missao da Racing Angels e dominar as pistas com precisao, inovacao e um
+            espirito competitivo inabalavel.
+          </p>
+        </article>
+      </section>
+
+      <section class="features-section" id="recursos">
+        <div class="section-heading apple-reveal">
+          <p class="eyebrow">Equipe</p>
+          <h2>Valores Racing Angels</h2>
+          <p>
+            A equipe nao e apresentada apenas como um time de corrida, mas como uma marca
+            com personalidade, proposito e presenca.
+          </p>
+        </div>
+
+        <div class="features-grid">
+          <article class="feature-card reveal-card">
+            <span class="feature-icon" aria-hidden="true"></span>
+            <h3>Velocidade</h3>
+            <p>Presente no estilo dinamico da pagina e na forma como os dados de corrida aparecem.</p>
+          </article>
+
+          <article class="feature-card reveal-card">
+            <span class="feature-icon" aria-hidden="true"></span>
+            <h3>Precisao</h3>
+            <p>Refletida na organizacao das informacoes, na classificacao e no controle das corridas.</p>
+          </article>
+
+          <article class="feature-card reveal-card">
+            <span class="feature-icon" aria-hidden="true"></span>
+            <h3>Inovacao</h3>
+            <p>Representada por uma proposta visual moderna, tecnica e inspirada no universo da F1.</p>
+          </article>
+
+          <article class="feature-card reveal-card">
+            <span class="feature-icon" aria-hidden="true"></span>
+            <h3>Trabalho em equipe</h3>
+            <p>Mostra a colaboracao por tras do desenvolvimento e da operacao da Racing Angels.</p>
+          </article>
+
+          <article class="feature-card reveal-card">
+            <span class="feature-icon" aria-hidden="true"></span>
+            <h3>Resiliencia</h3>
+            <p>Simboliza a capacidade da equipe de superar desafios e continuar evoluindo.</p>
+          </article>
+
+          <article class="feature-card reveal-card">
+            <span class="feature-icon" aria-hidden="true"></span>
+            <h3>Presenca</h3>
+            <p>Uma experiencia visual forte para quem acessa, feita para deixar marca no asfalto.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <a class="brand footer-brand" href="index.html" aria-label="Racing Angels">
+          <span class="brand-logo" aria-hidden="true">
+            <svg class="angel-logo" viewBox="0 0 180 108">
+              <path class="logo-halo" d="M68 17c6-9 38-9 44 0 4 6-1 13-22 13S64 23 68 17Z"></path>
+              <path class="logo-wing" d="M70 49C47 31 26 28 9 37c18 2 31 8 40 16-16-5-30-5-42 1 17 4 30 10 39 20-13-2-24-1-34 4 21 7 41 7 59-4"></path>
+              <path class="logo-wing right" d="M110 49c23-18 44-21 61-12-18 2-31 8-40 16 16-5 30-5 42 1-17 4-30 10-39 20 13-2 24-1 34 4-21 7-41 7-59-4"></path>
+              <path class="logo-letter" d="M90 31 60 88h17l5-11h16l5 11h17L90 31Zm-3 35 3-8 3 8h-6Z"></path>
+            </svg>
+          </span>
+          <span class="brand-text">RACING ANGELS</span>
+        </a>
+        <p>Voando baixo. Rasgando o asfalto.</p>
+      </div>
+      <a class="btn btn-primary" href="login.html">Acessar portal</a>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

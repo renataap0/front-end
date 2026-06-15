@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Racing Angels | Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="dashboard">
+  <canvas class="particles-canvas" id="particlesCanvas" aria-hidden="true"></canvas>
+
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Racing Angels">
+        <span class="brand-logo" aria-hidden="true">
+          <svg class="angel-logo" viewBox="0 0 180 108">
+            <path class="logo-halo" d="M68 17c6-9 38-9 44 0 4 6-1 13-22 13S64 23 68 17Z"></path>
+            <path class="logo-wing" d="M70 49C47 31 26 28 9 37c18 2 31 8 40 16-16-5-30-5-42 1 17 4 30 10 39 20-13-2-24-1-34 4 21 7 41 7 59-4"></path>
+            <path class="logo-wing right" d="M110 49c23-18 44-21 61-12-18 2-31 8-40 16 16-5 30-5 42 1-17 4-30 10-39 20 13-2 24-1 34 4-21 7-41 7-59-4"></path>
+            <path class="logo-letter" d="M90 31 60 88h17l5-11h16l5 11h17L90 31Zm-3 35 3-8 3 8h-6Z"></path>
+          </svg>
+        </span>
+        <span class="brand-text">RACING ANGELS</span>
+      </a>
+
+      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mainMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="main-nav" id="mainMenu" aria-label="Menu principal">
+        <a href="index.html">Inicio</a>
+        <a href="equipe.html">Equipe</a>
+        <a href="dashboard.html" aria-current="page">Dashboard</a>
+        <a href="analytics.html">Analises</a>
+        <a href="pistas.html">Pistas</a>
+        <a href="grid.html">Classificacao</a>
+        <a href="loja.html">Loja</a>
+        <a href="contato.html">Contato</a>
+        <a href="login.html">Login</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero apple-reveal">
+        <div>
+          <p class="eyebrow">Dashboard</p>
+          <h1>Controle da corrida</h1>
+          <p>Adicione corridas manualmente, acompanhe dados da equipe e administre os corredores.</p>
+        </div>
+        <span class="access-chip" id="accessChip">Modo visualizacao</span>
+      </section>
+
+      <section class="dashboard-card apple-reveal" aria-label="Dashboard principal Racing Angels">
+        <div class="dashboard-topbar">
+          <div>
+            <p class="dashboard-kicker">Race Control</p>
+            <h2>Interlagos GP</h2>
+          </div>
+          <div class="status-pill">
+            <span class="live-dot"></span>
+            AO VIVO
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <article class="metric-box">
+            <span>Voltas</span>
+            <strong>42</strong>
+          </article>
+          <article class="metric-box">
+            <span>Velocidade</span>
+            <strong><span id="speedValue">0</span> km/h</strong>
+          </article>
+          <article class="metric-box">
+            <span>Melhor volta</span>
+            <strong id="bestLapMetric">1:21.348</strong>
+          </article>
+          <article class="metric-box">
+            <span>Corredores</span>
+            <strong id="driverCountMetric">2</strong>
+          </article>
+        </div>
+
+        <div class="dashboard-main">
+          <div class="speedometer" aria-label="Velocimetro animado">
+            <svg viewBox="0 0 240 150" class="speedometer-svg" aria-hidden="true">
+              <path class="speed-track" d="M35 125a85 85 0 0 1 170 0"></path>
+              <path class="speed-progress" id="speedProgress" d="M35 125a85 85 0 0 1 170 0"></path>
+              <g class="speed-ticks">
+                <line x1="35" y1="125" x2="49" y2="125"></line>
+                <line x1="54" y1="74" x2="66" y2="82"></line>
+                <line x1="120" y1="40" x2="120" y2="55"></line>
+                <line x1="186" y1="74" x2="174" y2="82"></line>
+                <line x1="205" y1="125" x2="191" y2="125"></line>
+              </g>
+              <g class="needle">
+                <line id="speedNeedle" x1="120" y1="125" x2="52" y2="125"></line>
+                <circle cx="120" cy="125" r="9"></circle>
+              </g>
+            </svg>
+            <div class="speed-readout">
+              <span id="speedReadout">0</span>
+              <small>km/h</small>
+            </div>
+          </div>
+
+          <div class="race-data">
+            <div class="gear-display">
+              <span>Marcha</span>
+              <strong>7</strong>
+            </div>
+            <div class="data-list">
+              <p><span>Equipe</span><strong>Racing Angels</strong></p>
+              <p><span>Pista</span><strong>Interlagos</strong></p>
+              <p><span>API REST</span><strong class="online">Ativo</strong></p>
+              <p><span>WebSocket</span><strong class="online">Conectado</strong></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="track-monitor-section apple-reveal" aria-label="Mapa interativo da pista">
+        <div class="panel-title-row">
+          <div>
+            <p class="dashboard-kicker">Mapa Interlagos</p>
+            <h2>Pista interativa</h2>
+          </div>
+          <span class="access-chip">Clique nos carros</span>
+        </div>
+
+        <div class="track-monitor-layout">
+          <div class="interactive-track texture-panel">
+            <svg class="interlagos-map" viewBox="0 0 760 430" role="img" aria-label="Pista de Interlagos com carros monitoraveis">
+              <defs>
+                <filter id="trackGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="4" result="blur"></feGaussianBlur>
+                  <feMerge>
+                    <feMergeNode in="blur"></feMergeNode>
+                    <feMergeNode in="SourceGraphic"></feMergeNode>
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <path class="track-base" d="M598 79c86 38 101 126 53 190-45 61-131 53-202 52-76-1-116 53-205 38-91-15-145-97-107-173 33-65 118-60 184-73 83-16 166-82 277-34Z"></path>
+              <path class="track-center" d="M598 79c86 38 101 126 53 190-45 61-131 53-202 52-76-1-116 53-205 38-91-15-145-97-107-173 33-65 118-60 184-73 83-16 166-82 277-34Z"></path>
+              <path class="track-racing-line" d="M598 79c86 38 101 126 53 190-45 61-131 53-202 52-76-1-116 53-205 38-91-15-145-97-107-173 33-65 118-60 184-73 83-16 166-82 277-34Z"></path>
+
+              <g class="sector-labels" aria-hidden="true">
+                <text x="118" y="178">S1</text>
+                <text x="404" y="86">S2</text>
+                <text x="552" y="336">S3</text>
+              </g>
+
+              <g id="trackCars" class="track-cars"></g>
+            </svg>
+          </div>
+
+          <aside class="track-telemetry-card texture-panel">
+            <p class="dashboard-kicker">Carro selecionado</p>
+            <div class="track-driver-row">
+              <h2 id="trackDriver">Lia Torres #00</h2>
+              <span class="position-badge" id="trackPosition">P1</span>
+            </div>
+
+            <div class="monitor-speed">
+              <strong id="trackSpeed">0</strong>
+              <span>km/h</span>
+            </div>
+
+            <div class="telemetry-grid">
+              <article>
+                <span>Equipe</span>
+                <strong id="trackTeam">Racing Angels</strong>
+              </article>
+              <article>
+                <span>Setor</span>
+                <strong id="trackSector">S1</strong>
+              </article>
+              <article>
+                <span>Melhor volta</span>
+                <strong id="trackBestLap">1:21.348</strong>
+              </article>
+              <article>
+                <span>Ultima volta</span>
+                <strong id="trackLastLap">1:22.005</strong>
+              </article>
+            </div>
+
+            <div class="telemetry-bars">
+              <label>
+                <span>Combustivel</span>
+                <div class="bar-track"><i id="trackFuelBar"></i></div>
+              </label>
+              <label>
+                <span>Pneus</span>
+                <div class="bar-track"><i id="trackTireBar"></i></div>
+              </label>
+              <label>
+                <span>ERS</span>
+                <div class="bar-track"><i id="trackErsBar"></i></div>
+              </label>
+            </div>
+
+            <p class="monitor-note" id="trackNote">Clique em um carro no mapa para monitorar telemetria individual.</p>
+          </aside>
+        </div>
+      </section>
+
+      <section class="operations-grid dashboard-ops">
+        <section class="manual-race-card texture-panel apple-reveal">
+          <div class="panel-title-row">
+            <div>
+              <p class="dashboard-kicker">Manual</p>
+              <h2>Adicionar corrida</h2>
+            </div>
+            <span class="access-chip" id="manualAccessChip">Equipe/Admin</span>
+          </div>
+
+          <form class="manual-race-form" id="manualRaceForm">
+            <label>
+              <span>Corrida ou pista</span>
+              <input type="text" name="raceName" value="Interlagos Sprint" maxlength="40" autocomplete="off" data-mask="title" required>
+            </label>
+            <label>
+              <span>Corredor</span>
+              <input type="text" name="driverName" value="Lia Torres" maxlength="32" autocomplete="off" data-mask="name" required>
+            </label>
+            <label>
+              <span>Equipe</span>
+              <input type="text" name="teamName" value="Racing Angels" maxlength="32" autocomplete="off" data-mask="name" required>
+            </label>
+            <label>
+              <span>Voltas</span>
+              <input type="text" name="laps" value="42" inputmode="numeric" maxlength="3" autocomplete="off" data-mask="integer" required>
+            </label>
+            <label>
+              <span>Melhor volta</span>
+              <input type="text" name="bestLap" value="1:21.348" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="1:21.348" data-mask="lap" required>
+            </label>
+            <label>
+              <span>Ultima volta</span>
+              <input type="text" name="lastLap" value="1:22.005" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="1:22.005" data-mask="lap" required>
+            </label>
+            <button class="btn btn-primary" type="submit">Adicionar corrida</button>
+          </form>
+          <p class="form-message" id="raceFormMessage"></p>
+        </section>
+
+        <section class="team-admin-card texture-panel apple-reveal">
+          <div class="panel-title-row">
+            <div>
+              <p class="dashboard-kicker">Equipe</p>
+              <h2>Corredores</h2>
+            </div>
+            <span class="access-chip" id="teamAccessChip">Somente leitura</span>
+          </div>
+          <div class="driver-editor-grid" id="driverEditorGrid"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

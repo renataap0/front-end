@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Racing Angels | Pistas</title>
+  <meta name="description" content="Cadastro e analise de pistas da Racing Angels.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="tracks">
+  <canvas class="particles-canvas" id="particlesCanvas" aria-hidden="true"></canvas>
+
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Racing Angels">
+        <span class="brand-logo" aria-hidden="true">
+          <svg class="angel-logo" viewBox="0 0 180 108">
+            <path class="logo-halo" d="M68 17c6-9 38-9 44 0 4 6-1 13-22 13S64 23 68 17Z"></path>
+            <path class="logo-wing" d="M70 49C47 31 26 28 9 37c18 2 31 8 40 16-16-5-30-5-42 1 17 4 30 10 39 20-13-2-24-1-34 4 21 7 41 7 59-4"></path>
+            <path class="logo-wing right" d="M110 49c23-18 44-21 61-12-18 2-31 8-40 16 16-5 30-5 42 1-17 4-30 10-39 20 13-2 24-1 34 4-21 7-41 7-59-4"></path>
+            <path class="logo-letter" d="M90 31 60 88h17l5-11h16l5 11h17L90 31Zm-3 35 3-8 3 8h-6Z"></path>
+          </svg>
+        </span>
+        <span class="brand-text">RACING ANGELS</span>
+      </a>
+
+      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mainMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="main-nav" id="mainMenu" aria-label="Menu principal">
+        <a href="index.html">Inicio</a>
+        <a href="equipe.html">Equipe</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="analytics.html">Analises</a>
+        <a href="pistas.html" aria-current="page">Pistas</a>
+        <a href="grid.html">Classificacao</a>
+        <a href="loja.html">Loja</a>
+        <a href="contato.html">Contato</a>
+        <a href="login.html">Login</a>
+      </nav>
+    </header>
+
+    <main id="tracksPage">
+      <section class="page-hero apple-reveal">
+        <div>
+          <p class="eyebrow">Cadastro de pistas</p>
+          <h1>Biblioteca de circuitos</h1>
+          <p>
+            Cadastre pistas com comprimento, setores, curvas, recorde, grip, abrasividade,
+            elevacao e clima. As corridas usam esses dados nas analises automaticamente.
+          </p>
+        </div>
+        <span class="access-chip" id="trackAccessChip">Cadastro liberado</span>
+      </section>
+
+      <section class="track-admin-layout">
+        <article class="track-form-card texture-panel apple-reveal">
+          <div class="panel-title-row">
+            <div>
+              <p class="dashboard-kicker">Circuito</p>
+              <h2>Cadastrar pista</h2>
+            </div>
+            <span class="access-chip">Dados tecnicos</span>
+          </div>
+
+          <form class="manual-race-form track-form" id="trackForm">
+            <label>
+              <span>Nome da pista</span>
+              <input type="text" name="trackName" value="Interlagos" maxlength="40" autocomplete="off" data-mask="title" required>
+            </label>
+            <label>
+              <span>Pais</span>
+              <input type="text" name="country" value="Brasil" maxlength="32" autocomplete="off" data-mask="name" required>
+            </label>
+            <label>
+              <span>Cidade</span>
+              <input type="text" name="city" value="Sao Paulo" maxlength="32" autocomplete="off" data-mask="name" required>
+            </label>
+            <label>
+              <span>Comprimento km</span>
+              <input type="text" name="lengthKm" value="4.309" inputmode="decimal" maxlength="6" autocomplete="off" data-mask="decimal" required>
+            </label>
+            <label>
+              <span>Curvas</span>
+              <input type="text" name="turns" value="15" inputmode="numeric" maxlength="3" autocomplete="off" data-mask="integer" required>
+            </label>
+            <label>
+              <span>Setores</span>
+              <input type="text" name="sectors" value="3" inputmode="numeric" maxlength="2" autocomplete="off" data-mask="integer" required>
+            </label>
+            <label>
+              <span>Recorde</span>
+              <input type="text" name="record" value="1:10.540" inputmode="numeric" maxlength="8" autocomplete="off" data-mask="lap" required>
+            </label>
+            <label>
+              <span>Grip 0-100</span>
+              <input type="text" name="grip" value="86" inputmode="numeric" maxlength="3" autocomplete="off" data-mask="percent" required>
+            </label>
+            <label>
+              <span>Elevacao m</span>
+              <input type="text" name="elevation" value="43" inputmode="numeric" maxlength="3" autocomplete="off" data-mask="integer" required>
+            </label>
+            <label>
+              <span>Tipo</span>
+              <input type="text" name="type" value="Misto" maxlength="28" autocomplete="off" data-mask="title">
+            </label>
+            <label>
+              <span>Clima dominante</span>
+              <input type="text" name="weather" value="Instavel" maxlength="28" autocomplete="off" data-mask="title">
+            </label>
+            <label>
+              <span>Abrasividade 0-100</span>
+              <input type="text" name="abrasion" value="72" inputmode="numeric" maxlength="3" autocomplete="off" data-mask="percent" required>
+            </label>
+            <button class="btn btn-primary" type="submit">Salvar pista</button>
+          </form>
+          <p class="form-message" id="trackFormMessage"></p>
+        </article>
+
+        <aside class="track-summary-card texture-panel apple-reveal">
+          <div class="panel-title-row">
+            <div>
+              <p class="dashboard-kicker">Resumo</p>
+              <h2>Mapa tecnico</h2>
+            </div>
+          </div>
+          <div class="metrics-grid compact-metrics">
+            <article class="metric-box">
+              <span>Pistas</span>
+              <strong id="trackTotalMetric">0</strong>
+            </article>
+            <article class="metric-box">
+              <span>Mais eficiente</span>
+              <strong id="trackBestMetric">--</strong>
+            </article>
+            <article class="metric-box">
+              <span>Mais longa</span>
+              <strong id="trackLongestMetric">--</strong>
+            </article>
+            <article class="metric-box">
+              <span>Media km</span>
+              <strong id="trackAverageMetric">--</strong>
+            </article>
+          </div>
+          <ul class="strategy-list" id="trackStrategyList"></ul>
+        </aside>
+      </section>
+
+      <section class="features-section">
+        <div class="section-heading apple-reveal">
+          <p class="eyebrow">Circuitos cadastrados</p>
+          <h2>Pistas prontas para corrida</h2>
+          <p>Excluir ou atualizar uma pista altera imediatamente os rankings de eficiencia.</p>
+        </div>
+        <div class="registered-track-grid" id="trackList"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Racing Angels | Equipe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="team">
+  <canvas class="particles-canvas" id="particlesCanvas" aria-hidden="true"></canvas>
+
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Racing Angels">
+        <span class="brand-logo" aria-hidden="true">
+          <svg class="angel-logo" viewBox="0 0 180 108">
+            <path class="logo-halo" d="M68 17c6-9 38-9 44 0 4 6-1 13-22 13S64 23 68 17Z"></path>
+            <path class="logo-wing" d="M70 49C47 31 26 28 9 37c18 2 31 8 40 16-16-5-30-5-42 1 17 4 30 10 39 20-13-2-24-1-34 4 21 7 41 7 59-4"></path>
+            <path class="logo-wing right" d="M110 49c23-18 44-21 61-12-18 2-31 8-40 16 16-5 30-5 42 1-17 4-30 10-39 20 13-2 24-1 34 4-21 7-41 7-59-4"></path>
+            <path class="logo-letter" d="M90 31 60 88h17l5-11h16l5 11h17L90 31Zm-3 35 3-8 3 8h-6Z"></path>
+          </svg>
+        </span>
+        <span class="brand-text">RACING ANGELS</span>
+      </a>
+
+      <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="mainMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="main-nav" id="mainMenu" aria-label="Menu principal">
+        <a href="index.html">Inicio</a>
+        <a href="equipe.html" aria-current="page">Equipe</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="analytics.html">Analises</a>
+        <a href="pistas.html">Pistas</a>
+        <a href="grid.html">Classificacao</a>
+        <a href="loja.html">Loja</a>
+        <a href="contato.html">Contato</a>
+        <a href="login.html">Login</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero apple-reveal">
+        <div>
+          <p class="eyebrow">Equipe</p>
+          <h1>Marca com proposito</h1>
+          <p>
+            Racing Angels nasceu para transmitir alto desempenho, velocidade e dominio nas pistas,
+            com postura ousada, tecnica e determinada.
+          </p>
+        </div>
+        <span class="access-chip">Voando baixo</span>
+      </section>
+
+      <section class="team-profile">
+        <article class="texture-panel profile-card apple-reveal">
+          <p class="eyebrow">Missao</p>
+          <h2>Dominar as pistas com precisao</h2>
+          <p>
+            A missao da Racing Angels e competir com inovacao, controle e um espirito competitivo
+            inabalavel. Cada detalhe visual reforca performance, confianca e presenca.
+          </p>
+        </article>
+
+        <article class="texture-panel profile-card apple-reveal">
+          <p class="eyebrow">Identidade visual</p>
+          <h2>Preto, carbono e dourado champanhe</h2>
+          <p>
+            O preto traz autoridade e tecnologia. O dourado champanhe substitui o amarelo vibrante
+            por uma presenca mais sofisticada, mantendo energia sem perder elegancia.
+          </p>
+        </article>
+      </section>
+
+      <section class="features-section">
+        <div class="section-heading apple-reveal">
+          <p class="eyebrow">Valores</p>
+          <h2>O que move a Racing Angels</h2>
+        </div>
+
+        <div class="features-grid">
+          <article class="feature-card reveal-card">
+            <span class="feature-icon" aria-hidden="true"></span>
+            <h3>Velocidade</h3>
+            <p>Ritmo, resposta rapida e foco em decisao de pista.</p>
+          </article>
+          <article class="feature-card reveal-card">
+            <span class="feature-icon" aria-hidden="true"></span>
+            <h3>Precisao</h3>
+            <p>Dados organizados, leitura clara e classificacao por performance.</p>
+          </article>
+          <article class="feature-card reveal-card">
+            <span class="feature-icon" aria-hidden="true"></span>
+            <h3>Resiliencia</h3>
+            <p>Capacidade de evoluir, corrigir rota e voltar mais forte.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
