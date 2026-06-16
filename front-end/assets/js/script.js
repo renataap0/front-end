@@ -1982,7 +1982,82 @@ function setupDashboardPage() {
   setupDriverEditor();
   setupManualRaceForm();
   setupTrackMonitor();
+  setupTrackCarForm();
 }
+
+function setupTrackCarForm() {
+  const trackCarForm = document.getElementById("trackCarForm");
+  const trackCarFormMessage = document.getElementById("trackCarFormMessage");
+
+  if (!trackCarForm) {
+    return;
+  }
+
+  const role = getRoleConfig();
+  const canAddRace = role.canAddRace;
+
+  setupRaceInputMasks(trackCarForm);
+
+  trackCarForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!canAddRace) {
+      if (trackCarFormMessage) {
+        trackCarFormMessage.textContent = "Este perfil nao pode adicionar carros.";
+      }
+      return;
+    }
+
+    const formData = new FormData(trackCarForm);
+    const driver = String(formData.get("driverName") || "").trim();
+    const team = String(formData.get("teamName") || "").trim() || currentTeam;
+    const carNumberRaw = String(formData.get("carNumber") || "").trim();
+    const sector = String(formData.get("sector") || "S2").trim();
+
+    if (!driver || !team || !carNumberRaw) {
+      if (trackCarFormMessage) {
+        trackCarFormMessage.textContent = "Preencha piloto, equipe e numero.";
+      }
+      return;
+    }
+
+    const carNumber = String(carNumberRaw).padStart(2, "0").slice(-2);
+
+    const trackCar = {
+      driver,
+      team,
+      carNumber,
+      sector,
+      x: 0,
+      y: 0,
+      angle: 0
+    };
+
+    addTrackCar(trackCar);
+    if (trackCarFormMessage) {
+      trackCarFormMessage.textContent = "Carro adicionado ao mapa.";
+    }
+
+    activeTrackIndex = 0;
+    renderTrackCars();
+    updateTrackMonitor();
+
+    trackCarForm.reset();
+
+    // recarrega valores default do formulário quando o usuario tiver acesso de equipe
+    const driverInput = trackCarForm.elements.driverName;
+    const teamInput = trackCarForm.elements.teamName;
+    const numberInput = trackCarForm.elements.carNumber;
+    const sectorInput = trackCarForm.elements.sector;
+
+    if (driverInput) driverInput.value = driver;
+    if (teamInput) teamInput.value = team;
+    if (numberInput) numberInput.value = carNumber;
+    if (sectorInput) sectorInput.value = sector;
+  });
+}
+
+
 
 function renderTrackCars() {
   const trackCars = document.getElementById("trackCars");
