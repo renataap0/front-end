@@ -1,0 +1,26 @@
+{
+  "name": "racing-angels-frontend",
+  "version": "1.0.0",
+  "description": "Frontend para Racing Angels - Motorsport Performance Portal",
+  "private": true,
+  "scripts": {
+    "serve": "npx serve .",
+    "dev": "python -m http.server 8080",
+    "start": "npx serve . -p 8080"
+  },
+  "keywords": [
+    "racing",
+    "motorsport",
+    "performance",
+    "telemetry",
+    "frontend"
+  ],
+  "author": "Racing Angels Team",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "serve": "^14.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

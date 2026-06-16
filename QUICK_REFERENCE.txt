@@ -1,0 +1,171 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    🏁 RACING ANGELS - QUICK REFERENCE                          ║
+║                          Integração Frontend ↔ Backend                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─ 🚀 INICIAR (3 TERMINAIS) ──────────────────────────────────────────────────┐
+│                                                                                │
+│  Terminal 1 - BACKEND                                                         │
+│  $ cd back-end                                                                │
+│  $ npm install                                                                │
+│  $ npm run dev                                                                │
+│  ✅ http://localhost:3333                                                     │
+│                                                                                │
+│  Terminal 2 - MYSQL (Docker)                                                  │
+│  $ docker run --name ra-mysql -e MYSQL_ROOT_PASSWORD=root \                  │
+│      -e MYSQL_DATABASE=racing_angels -p 3306:3306 -d mysql:8                 │
+│  ✅ localhost:3306 (root:root)                                                │
+│                                                                                │
+│  Terminal 3 - FRONTEND                                                        │
+│  $ cd front-end                                                               │
+│  $ npm run serve                                                              │
+│  ✅ http://localhost:8080                                                     │
+│                                                                                │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 🔐 LOGIN (copiar/colar no console F12) ────────────────────────────────────┐
+│                                                                                │
+│  Admin:                                                                       │
+│  window.loginApi('admin', '123456')                                          │
+│                                                                                │
+│  Equipe:                                                                      │
+│  window.loginApi('equipe', '123456')                                         │
+│                                                                                │
+│  Driver:                                                                      │
+│  window.loginApi('corredor', '123456')                                       │
+│                                                                                │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 📡 FUNÇÕES PRINCIPAIS ─────────────────────────────────────────────────────┐
+│                                                                                │
+│  window.loginApi(user, pass)                 → Login + token JWT              │
+│  window.getRacesApi(filters)                 → Listar corridas               │
+│  window.createOrderApi(data)                 → Criar pedido na loja           │
+│  window.apiFetch(path, options)              → Requisição customizada         │
+│  window.getToken()                           → Pegar token armazenado        │
+│                                                                                │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 🧪 TESTES RÁPIDOS ─────────────────────────────────────────────────────────┐
+│                                                                                │
+│  Teste 1 - Backend respondendo?                                               │
+│  $ curl -X POST http://localhost:3333/api/auth/login \                       │
+│      -H "Content-Type: application/json" \                                   │
+│      -d '{"username":"admin","password":"123456"}'                           │
+│                                                                                │
+│  Teste 2 - Frontend conectado?                                                │
+│  (no console do navegador)                                                    │
+│  > window.apiFetch('/users/me').then(d => console.log(d))                    │
+│                                                                                │
+│  Teste 3 - Dados sincronizados?                                               │
+│  > window.getRacesApi().then(r => console.log(r.length))                     │
+│                                                                                │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 📁 ESTRUTURA IMPORTANTE ───────────────────────────────────────────────────┐
+│                                                                                │
+│  back-end/.env                          ← Credenciais DB                     │
+│    DATABASE_URL="mysql://root:root@localhost:3306/racing_angels"             │
+│    PORT=3333                                                                  │
+│                                                                                │
+│  assets/js/api.js                       ← Integração com backend             │
+│    window.loginApi()                                                          │
+│    window.getRacesApi()                                                       │
+│    window.apiFetch()                                                          │
+│                                                                                │
+│  *.html (9 páginas)                     ← Todas incluem:                     │
+│    <script src="assets/js/api.js"></script>                                  │
+│    <script src="script.js"></script>                                         │
+│                                                                                │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 📚 DOCUMENTAÇÃO ───────────────────────────────────────────────────────────┐
+│                                                                                │
+│  README.md                              → Setup completo + endpoints          │
+│  SETUP_CHECKLIST.md                     → Verificação passo a passo           │
+│  EXAMPLES.js                            → 10+ exemplos práticos               │
+│  INTEGRAÇÃO_SUMMARY.md                  → Resumo executivo                    │
+│  MUDANÇAS.md                            → O que foi alterado                  │
+│                                                                                │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 🔑 CREDENCIAIS ────────────────────────────────────────────────────────────┐
+│                                                                                │
+│  Usuário   │ Senha  │ Role   │ Acesso                                        │
+│  ────────────────────────────────────────────────────────────────────────    │
+│  admin     │ 123456 │ admin  │ ✅ Controle total                             │
+│  equipe    │ 123456 │ team   │ ✅ Gestão de equipe/pilotos                   │
+│  corredor  │ 123456 │ driver │ ✅ Visualização (piloto)                      │
+│                                                                                │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 📊 ENDPOINTS PRINCIPAIS ───────────────────────────────────────────────────┐
+│                                                                                │
+│  POST   /api/auth/login                 (público)                             │
+│  GET    /api/users                      (requer token)                        │
+│  GET    /api/teams                      (requer token)                        │
+│  GET    /api/drivers                    (requer token)                        │
+│  GET    /api/cars                       (requer token)                        │
+│  GET    /api/tracks                     (requer token)                        │
+│  GET    /api/races                      (requer token)                        │
+│  POST   /api/races                      (requer token)                        │
+│  DELETE /api/races/:id                  (requer token)                        │
+│  GET    /api/products                   (requer token)                        │
+│  POST   /api/orders                     (requer token)                        │
+│  GET    /api/analytics                  (requer token)                        │
+│  GET    /api/dashboard/summary          (requer token)                        │
+│                                                                                │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ 🔧 CONFIGURAÇÃO ───────────────────────────────────────────────────────────┐
+│                                                                                │
+│  Porta BD:      3306 (MySQL)                                                  │
+│  Usuário BD:    root                                                          │
+│  Senha BD:      root                                                          │
+│  Backend:       http://localhost:3333                                         │
+│  Frontend:      http://localhost:8080 (ou 5000 com serve)                    │
+│  Auth Token:    localStorage.racingAngelsToken                               │
+│  User Data:     localStorage.racingAngelsUser                                │
+│                                                                                │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ ⚡ SHORTCUTS ──────────────────────────────────────────────────────────────┐
+│                                                                                │
+│  # Tudo de uma vez (com MySQL):                                              │
+│  cd back-end && npm install && npx prisma migrate dev && npm run dev        │
+│                                                                                │
+│  # Frontend:                                                                  │
+│  cd front-end && npm run serve                                               │
+│                                                                                │
+│  # Seed de dados:                                                             │
+│  cd back-end && npx prisma db seed                                           │
+│                                                                                │
+│  # Ver studio (UI do banco):                                                 │
+│  cd back-end && npx prisma studio                                            │
+│                                                                                │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+┌─ ❌ ERROS COMUNS ───────────────────────────────────────────────────────────┐
+│                                                                                │
+│  ERRO: ENOTFOUND localhost:3306                                              │
+│  FIX:  docker run --name ra-mysql -e MYSQL_ROOT_PASSWORD=root \             │
+│        -e MYSQL_DATABASE=racing_angels -p 3306:3306 -d mysql:8              │
+│                                                                                │
+│  ERRO: CORS error                                                             │
+│  FIX:  Backend está rodando em http://localhost:3333?                       │
+│        Verifique npm run dev                                                  │
+│                                                                                │
+│  ERRO: 401 Unauthorized                                                       │
+│  FIX:  Token expirado, faça login: window.loginApi('admin', '123456')       │
+│                                                                                │
+│  ERRO: Endpoints retornam vazio                                              │
+│  FIX:  Seed não executado: npx prisma db seed                               │
+│                                                                                │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  ✅ PRONTO PARA USAR!                                                         ║
+║  🚀 Backend rodando • 🔗 Frontend integrado • 📡 API funcionando             ║
+║                                                                               ║
+║  Data: 16/06/2026 | Versão: 1.0.0                                           ║
+╚══════════════════════════════════════════════════════════════════════════════╝
