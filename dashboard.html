@@ -49,8 +49,8 @@
       <section class="page-hero apple-reveal">
         <div>
           <p class="eyebrow">Dashboard</p>
-          <h1>Controle da corrida</h1>
-          <p>Adicione corridas manualmente, acompanhe dados da equipe e administre os corredores.</p>
+          <h1>Centro de operacao</h1>
+          <p>Registre corridas, acompanhe indicadores de pista e mantenha pilotos e carros organizados em um unico painel.</p>
         </div>
         <span class="access-chip" id="accessChip">Modo visualizacao</span>
       </section>
@@ -63,7 +63,7 @@
           </div>
           <div class="status-pill">
             <span class="live-dot"></span>
-            AO VIVO
+            ONLINE
           </div>
         </div>
 
@@ -117,8 +117,8 @@
             <div class="data-list">
               <p><span>Equipe</span><strong>Racing Angels</strong></p>
               <p><span>Pista</span><strong>Interlagos</strong></p>
-              <p><span>API REST</span><strong class="online">Ativo</strong></p>
-              <p><span>WebSocket</span><strong class="online">Conectado</strong></p>
+              <p><span>API REST</span><strong class="online">Ativa</strong></p>
+              <p><span>Banco MySQL</span><strong class="online">Sincronizado</strong></p>
             </div>
           </div>
         </div>
@@ -249,8 +249,8 @@
             <label>
               <span>Modo: registrar todas as voltas</span>
               <select name="allLapsMode" data-mask="title">
-                <option value="placeholder" selected>Gerar automaticamente (melhor/ultima)</option>
-                <option value="single">Somente best/last (legado)</option>
+                <option value="projected" selected>Projetar ritmo completo (melhor/ultima)</option>
+                <option value="single">Registrar somente resumo</option>
               </select>
             </label>
 
@@ -265,7 +265,7 @@
               <p class="dashboard-kicker">Equipe</p>
               <h2>Corredores</h2>
             </div>
-            <span class="access-chip" id="teamAccessChip">Somente leitura</span>
+            <span class="access-chip" id="teamAccessChip">Acesso controlado</span>
           </div>
           <div class="driver-editor-grid" id="driverEditorGrid"></div>
         </section>

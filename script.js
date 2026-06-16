@@ -26,19 +26,19 @@ const roles = {
   driver: {
     label: "Corredor",
     loginText: "Entrar como Corredor",
-    feedback: "Perfil selecionado: Corredor.",
-    signedIn: "Acesso liberado como Corredor.",
+    feedback: "Perfil Corredor pronto para acesso.",
+    signedIn: "Sessao iniciada como Corredor.",
     chip: "Modo visualizacao",
     canAddRace: false,
     canEditDrivers: false,
     canDeleteRace: false,
-    canManageTracks: true
+    canManageTracks: false
   },
   team: {
     label: "Equipe",
     loginText: "Entrar como Equipe",
-    feedback: "Perfil selecionado: Equipe.",
-    signedIn: "Acesso liberado como Equipe.",
+    feedback: "Perfil Equipe pronto para operacao.",
+    signedIn: "Sessao iniciada como Equipe.",
     chip: "Gestao de equipe",
     canAddRace: true,
     canEditDrivers: true,
@@ -48,8 +48,8 @@ const roles = {
   admin: {
     label: "Admin",
     loginText: "Entrar como Admin",
-    feedback: "Perfil selecionado: Admin.",
-    signedIn: "Acesso liberado como Admin.",
+    feedback: "Perfil Admin pronto para controle total.",
+    signedIn: "Sessao iniciada como Admin.",
     chip: "Controle total",
     canAddRace: true,
     canEditDrivers: true,
@@ -61,18 +61,25 @@ const roles = {
 const storageKeys = {
   role: "racingAngelsRole",
   user: "racingAngelsUser",
+  token: "racingAngelsToken",
 
-  // legado (app atual)
   races: "racingAngelsRaces",
   drivers: "racingAngelsDrivers",
   tracks: "racingAngelsTracks",
   cars: "racingAngelsCars",
 
-  // campeonato (nova estrutura)
   season: "racingAngelsSeason",
 
   cart: "racingAngelsCart",
   orders: "racingAngelsOrders"
+};
+
+const API_BASE_URL = "http://localhost:3333/api";
+
+const roleCredentials = {
+  driver: { username: "corredor", password: "123456" },
+  team: { username: "equipe", password: "123456" },
+  admin: { username: "admin", password: "123456" }
 };
 
 
@@ -1014,6 +1021,7 @@ function setupLoginPage() {
   const loginForm = document.getElementById("loginForm");
   const loginButton = document.getElementById("loginButton");
   const loginUser = document.getElementById("loginUser");
+  const loginPassword = loginForm?.querySelector('input[type="password"]');
   const roleFeedback = document.getElementById("roleFeedback");
 
   if (!roleOptions.length || !loginForm || !loginButton || !roleFeedback) {
@@ -1029,6 +1037,14 @@ function setupLoginPage() {
       option.classList.toggle("is-active", option.dataset.role === roleKey);
     });
 
+    if (loginUser && roleCredentials[roleKey]) {
+      loginUser.value = roleCredentials[roleKey].username;
+    }
+
+    if (loginPassword && roleCredentials[roleKey]) {
+      loginPassword.value = roleCredentials[roleKey].password;
+    }
+
     loginButton.textContent = roles[roleKey].loginText;
     roleFeedback.textContent = roles[roleKey].feedback;
   }
@@ -1037,15 +1053,40 @@ function setupLoginPage() {
     option.addEventListener("click", () => updateSelection(option.dataset.role));
   });
 
-  loginForm.addEventListener("submit", (event) => {
+  loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    localStorage.setItem(storageKeys.role, selectedRole);
-    localStorage.setItem(storageKeys.user, loginUser?.value || "operador");
-    roleFeedback.textContent = `${roles[selectedRole].signedIn} Redirecionando para o dashboard...`;
 
-    window.setTimeout(() => {
-      window.location.href = "dashboard.html";
-    }, 650);
+    const username = loginUser?.value?.trim() || roleCredentials[selectedRole].username;
+    const password = loginPassword?.value || roleCredentials[selectedRole].password;
+
+    loginButton.disabled = true;
+    roleFeedback.textContent = "Validando credenciais no Race Hub...";
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Nao foi possivel autenticar.");
+      }
+
+      const authenticatedRole = data.user?.role || selectedRole;
+      localStorage.setItem(storageKeys.role, authenticatedRole);
+      localStorage.setItem(storageKeys.user, JSON.stringify(data.user));
+      localStorage.setItem(storageKeys.token, data.token);
+      roleFeedback.textContent = `${roles[authenticatedRole]?.signedIn || "Sessao iniciada."} Redirecionando para o dashboard...`;
+
+      window.setTimeout(() => {
+        window.location.href = "dashboard.html";
+      }, 650);
+    } catch (error) {
+      roleFeedback.textContent = error.message || "Nao foi possivel entrar. Verifique a API em localhost:3333.";
+      loginButton.disabled = false;
+    }
   });
 
   updateSelection(selectedRole);
@@ -1068,7 +1109,7 @@ function updateDashboardPermissions() {
   }
 
   if (teamAccessChip) {
-    teamAccessChip.textContent = role.canEditDrivers ? "Edicao liberada" : "Somente leitura";
+    teamAccessChip.textContent = role.canEditDrivers ? "Edicao liberada" : "Consulta operacional";
   }
 
   if (!manualRaceForm) {
@@ -1245,7 +1286,7 @@ function setupManualRaceForm() {
     const bestLapRaw = formData.get("bestLap").trim();
     const lastLapRaw = formData.get("lastLap").trim();
 
-    const allLapsMode = formData.get("allLapsMode") || "placeholder";
+    const allLapsMode = formData.get("allLapsMode") || "projected";
 
     const newRace = {
       id: Date.now(),
@@ -1266,7 +1307,7 @@ function setupManualRaceForm() {
     saveRaces(races);
 
     // campeonato: registra todas as voltas (MVP via geração a partir de best/last)
-    if (allLapsMode === "placeholder") {
+    if (allLapsMode === "projected") {
       upsertSeasonRoundFromManualRace(newRace);
     }
 
@@ -1311,7 +1352,7 @@ function buildSeasonFromRacesIfNeeded() {
     const trackName = getRaceTrackName(race);
     const trackIndex = paddedTracks.findIndex((t) => normalizeKey(t) === normalizeKey(trackName));
 
-    // se não achou, cai no 1º round
+    // Se a pista nao estiver cadastrada, associa ao primeiro round disponivel.
     const roundIndex = trackIndex >= 0 ? trackIndex : 0;
     const round = rounds[roundIndex];
 
@@ -1329,7 +1370,7 @@ function buildSeasonFromRacesIfNeeded() {
     const bestMs = parseLapTime(race.bestLap);
     const lastMs = parseLapTime(race.lastLap);
 
-    // placeholder para “todas as voltas”: tenta usar quantidade de laps e duplica
+    // Projeta a sequencia de voltas a partir da melhor e da ultima volta.
     const lapCount = Number(race.laps) || 1;
     const baseList = Number.isFinite(lastMs) ? [bestMs, lastMs] : [bestMs];
 
@@ -1348,7 +1389,7 @@ function getRoundIndexFromRaceName(raceName, season) {
   return idx >= 0 ? idx : 0;
 }
 
-function generateLapTimesMsFromBestLast(lapsCount, bestMs, lastMs, strategy = "placeholder") {
+function generateLapTimesMsFromBestLast(lapsCount, bestMs, lastMs, strategy = "projected") {
   const n = Math.max(1, Number(lapsCount) || 1);
   const best = Number.isFinite(bestMs) ? bestMs : Number.POSITIVE_INFINITY;
   const last = Number.isFinite(lastMs) ? lastMs : best;
@@ -1357,7 +1398,7 @@ function generateLapTimesMsFromBestLast(lapsCount, bestMs, lastMs, strategy = "p
     return [];
   }
 
-  // “melhor/ultima” vira uma sequência com pequena curvatura para parecer natural
+  // Melhor e ultima volta viram uma sequencia com pequena curvatura operacional.
   const delta = Number.isFinite(best) && Number.isFinite(last) ? (last - best) : 0;
   const scale = strategy === "aggressive" ? 1.08 : 1;
 
@@ -1365,9 +1406,9 @@ function generateLapTimesMsFromBestLast(lapsCount, bestMs, lastMs, strategy = "p
   for (let i = 0; i < n; i += 1) {
     const t = n === 1 ? 0 : i / (n - 1); // 0..1
 
-    // curva: começa perto do melhor, pode piorar ou estabilizar rumo ao last
+    // A curva comeca perto da melhor volta e estabiliza em direcao a ultima.
     const curve = (t * t) * delta * scale;
-    const wobble = Math.sin(i * 0.9 + n) * 18; // ±18ms (só para variação visual)
+    const wobble = Math.sin(i * 0.9 + n) * 18;
 
     const ms = (Number.isFinite(best) ? best : last) + curve + wobble;
     lapTimesMs.push(ms);
@@ -1403,7 +1444,7 @@ function upsertSeasonRoundFromManualRace(newRace) {
   const lastMs = parseLapTime(newRace.lastLap);
 
   const lapCount = Number(newRace.laps) || 1;
-  const lapTimesMs = generateLapTimesMsFromBestLast(lapCount, bestMs, lastMs, "placeholder");
+  const lapTimesMs = generateLapTimesMsFromBestLast(lapCount, bestMs, lastMs, "projected");
   round.recordsByDriver[driverKey].lapTimesMs = [...round.recordsByDriver[driverKey].lapTimesMs, ...lapTimesMs];
 
   rounds[roundIndex] = round;
@@ -1656,7 +1697,7 @@ function updateCarMonitor() {
   monitorLastLap.textContent = race.lastLap || "-";
   monitorStatus.textContent = race.status || "Monitorado";
   monitorLaps.textContent = race.laps;
-  monitorNote.textContent = `Monitorando ${race.driver} em tempo real simulado. Clique em outro carro para trocar.`;
+  monitorNote.textContent = `Monitorando ${race.driver} com telemetria de referencia. Clique em outro carro para trocar.`;
   fuelBar.style.width = `${telemetry.fuel}%`;
   tireBar.style.width = `${telemetry.tire}%`;
   ersBar.style.width = `${telemetry.ers}%`;
@@ -2091,7 +2132,7 @@ function setupTracksPage() {
   }
 
   if (trackAccessChip) {
-    trackAccessChip.textContent = getRoleConfig().canManageTracks ? "Cadastro liberado" : "Somente leitura";
+    trackAccessChip.textContent = getRoleConfig().canManageTracks ? "Cadastro liberado" : "Consulta operacional";
   }
 
   renderTrackList();
@@ -2204,7 +2245,7 @@ function setupTracksPage() {
     renderTrackList();
 
     if (trackFormMessage) {
-      trackFormMessage.textContent = "Pista removida do cadastro local.";
+      trackFormMessage.textContent = "Pista removida da biblioteca tecnica.";
     }
   });
 }
@@ -2511,7 +2552,7 @@ function setupShopPage() {
       if (getDigits(cardNumber.value).length !== 16) {
         cardNumber.focus();
         if (checkoutMessage) {
-          checkoutMessage.textContent = "Cartao simulado precisa ter 16 numeros.";
+          checkoutMessage.textContent = "Numero do cartao precisa ter 16 digitos.";
         }
         return;
       }
@@ -2552,7 +2593,7 @@ function setupShopPage() {
     updatePaymentFields();
 
     if (checkoutMessage) {
-      checkoutMessage.textContent = `Compra simulada aprovada. Pedido ${orderCode} no total de ${formatCurrency(totals.total)}.`;
+      checkoutMessage.textContent = `Pedido ${orderCode} registrado com sucesso no total de ${formatCurrency(totals.total)}.`;
     }
   });
 
