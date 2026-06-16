@@ -67,6 +67,7 @@ const storageKeys = {
   drivers: "racingAngelsDrivers",
   tracks: "racingAngelsTracks",
   cars: "racingAngelsCars",
+  trackCars: "racingAngelsTrackCars",
   products: "racingAngelsProducts",
 
   season: "racingAngelsSeason",
@@ -92,7 +93,7 @@ const defaultRaces = [
   {
     id: 1,
     race: "Interlagos GP",
-    driver: "Lia Torres",
+    driver: "Raphael Galhardo",
     team: currentTeam,
     laps: 42,
     bestLap: "1:21.348",
@@ -102,8 +103,8 @@ const defaultRaces = [
   {
     id: 2,
     race: "Monaco Night Run",
-    driver: "Nina Vale",
-    team: currentTeam,
+    driver: "Renata Queiroz",
+    team: "Sakura Racing",
     laps: 39,
     bestLap: "1:12.908",
     lastLap: "1:13.210",
@@ -112,8 +113,8 @@ const defaultRaces = [
   {
     id: 3,
     race: "Spa Aero Test",
-    driver: "Lia Torres",
-    team: currentTeam,
+    driver: "Rafaela Santana",
+    team: "Apex Storms",
     laps: 31,
     bestLap: "1:44.210",
     lastLap: "1:45.010",
@@ -122,8 +123,8 @@ const defaultRaces = [
   {
     id: 4,
     race: "Suzuka Data Cup",
-    driver: "Kai Morita",
-    team: "Orion Apex",
+    driver: "Luca Guidoni",
+    team: "Apex Racing",
     laps: 36,
     bestLap: "1:29.771",
     lastLap: "1:30.402",
@@ -133,13 +134,18 @@ const defaultRaces = [
 
 const defaultDrivers = [
   {
-    name: "Lia Torres",
+    name: "Raphael Galhardo",
     car: "RA-07",
     status: "Titular"
   },
   {
-    name: "Nina Vale",
+    name: "Renata Queiroz",
     car: "RA-11",
+    status: "Titular"
+  },
+  {
+    name: "Rafaela Santana",
+    car: "RA-21",
     status: "Reserva"
   }
 ];
@@ -226,7 +232,7 @@ const defaultCars = [
   {
     id: 1,
     model: "RA-07 Halo",
-    driver: "Lia Torres",
+    driver: "Raphael Galhardo",
     team: currentTeam,
     power: 1018,
     aero: 92,
@@ -240,8 +246,8 @@ const defaultCars = [
   {
     id: 2,
     model: "RA-11 Sprint",
-    driver: "Nina Vale",
-    team: currentTeam,
+    driver: "Renata Queiroz",
+    team: "Sakura Racing",
     power: 1006,
     aero: 88,
     reliability: 91,
@@ -254,8 +260,8 @@ const defaultCars = [
   {
     id: 3,
     model: "RA-X Reserve",
-    driver: "Lia Torres",
-    team: currentTeam,
+    driver: "Rafaela Santana",
+    team: "Apex Storms",
     power: 998,
     aero: 86,
     reliability: 96,
@@ -268,8 +274,8 @@ const defaultCars = [
   {
     id: 4,
     model: "OA-01 Apex",
-    driver: "Kai Morita",
-    team: "Orion Apex",
+    driver: "Luca Guidoni",
+    team: "Apex Racing",
     power: 1002,
     aero: 87,
     reliability: 89,
@@ -278,6 +284,121 @@ const defaultCars = [
     topSpeed: 328,
     weight: 800,
     package: "Reta longa"
+  }
+];
+
+const defaultTrackCars = [
+  {
+    id: 1,
+    driver: "Raphael Galhardo",
+    team: currentTeam,
+    carNumber: "07",
+    race: "Interlagos GP",
+    bestLap: "1:21.348",
+    lastLap: "1:22.005",
+    status: "Na pista",
+    sector: "S2",
+    x: 590,
+    y: 80,
+    angle: -20
+  },
+  {
+    id: 2,
+    driver: "Renata Queiroz",
+    team: "Sakura Racing",
+    carNumber: "11",
+    race: "Interlagos GP",
+    bestLap: "1:22.114",
+    lastLap: "1:22.880",
+    status: "Na pista",
+    sector: "S3",
+    x: 655,
+    y: 210,
+    angle: 78
+  },
+  {
+    id: 3,
+    driver: "Rafaela Santana",
+    team: "Apex Storms",
+    carNumber: "21",
+    race: "Interlagos GP",
+    bestLap: "1:23.004",
+    lastLap: "1:23.552",
+    status: "Na pista",
+    sector: "S3",
+    x: 454,
+    y: 320,
+    angle: 180
+  },
+  {
+    id: 4,
+    driver: "Luca Guidoni",
+    team: "Apex Racing",
+    carNumber: "34",
+    race: "Interlagos GP",
+    bestLap: "1:24.220",
+    lastLap: "1:24.801",
+    status: "Box radio",
+    sector: "S1",
+    x: 245,
+    y: 354,
+    angle: 204
+  },
+  {
+    id: 5,
+    driver: "Gabriela Basilio",
+    team: "Kerberus",
+    carNumber: "44",
+    race: "Interlagos GP",
+    bestLap: "1:24.901",
+    lastLap: "1:25.330",
+    status: "Na pista",
+    sector: "S1",
+    x: 131,
+    y: 218,
+    angle: -80
+  },
+  {
+    id: 6,
+    driver: "Murilo Araujo",
+    team: "Wind Speed",
+    carNumber: "55",
+    race: "Interlagos GP",
+    bestLap: "1:25.104",
+    lastLap: "1:25.780",
+    status: "Na pista",
+    sector: "S2",
+    x: 330,
+    y: 114,
+    angle: -12
+  },
+  {
+    id: 7,
+    driver: "Ryan Soares",
+    team: "Cowabunga",
+    carNumber: "66",
+    race: "Interlagos GP",
+    bestLap: "1:25.840",
+    lastLap: "1:26.110",
+    status: "Na pista",
+    sector: "S2",
+    x: 500,
+    y: 115,
+    angle: 16
+  },
+  {
+    id: 8,
+    driver: "Vitor Guimaraes",
+    team: "Septem",
+    carNumber: "77",
+    race: "Interlagos GP",
+    bestLap: "1:26.300",
+    lastLap: "1:26.950",
+    status: "Na pista",
+    sector: "S3",
+    x: 560,
+    y: 300,
+    angle: 145
   }
 ];
 
@@ -810,6 +931,14 @@ function saveCars(cars) {
   writeJSON(storageKeys.cars, cars);
 }
 
+function getSavedTrackCars() {
+  return readJSON(storageKeys.trackCars, defaultTrackCars);
+}
+
+function saveTrackCars(cars) {
+  writeJSON(storageKeys.trackCars, cars);
+}
+
 function escapeHTML(value) {
   const parser = document.createElement("span");
   parser.textContent = String(value);
@@ -1223,23 +1352,59 @@ function getCarNumber(driver, index) {
   return String((seed + index * 11) % 89 + 10).padStart(2, "0");
 }
 
-function getTrackCars() {
-  const rankedRaces = getGridRaces();
-  const points = [
-    { x: 590, y: 80, sector: "S2", angle: -20 },
-    { x: 655, y: 210, sector: "S3", angle: 78 },
-    { x: 454, y: 320, sector: "S3", angle: 180 },
-    { x: 245, y: 354, sector: "S1", angle: 204 },
-    { x: 131, y: 218, sector: "S1", angle: -80 },
-    { x: 330, y: 114, sector: "S2", angle: -12 }
-  ];
+const trackCarPoints = [
+  { x: 590, y: 80, sector: "S2", angle: -20 },
+  { x: 655, y: 210, sector: "S3", angle: 78 },
+  { x: 454, y: 320, sector: "S3", angle: 180 },
+  { x: 245, y: 354, sector: "S1", angle: 204 },
+  { x: 131, y: 218, sector: "S1", angle: -80 },
+  { x: 330, y: 114, sector: "S2", angle: -12 },
+  { x: 500, y: 115, sector: "S2", angle: 16 },
+  { x: 560, y: 300, sector: "S3", angle: 145 }
+];
 
-  return rankedRaces.slice(0, points.length).map((race, index) => ({
-    ...race,
-    ...points[index],
-    gridPosition: index + 1,
-    carNumber: getCarNumber(race.driver, index)
-  }));
+function getTrackCars() {
+  return getSavedTrackCars().map((car, index) => {
+    const point = trackCarPoints[index % trackCarPoints.length];
+    const lapOffset = Math.min(index * 370, 7200);
+
+    return {
+      race: "Interlagos GP",
+      bestLap: formatMilliseconds(81348 + lapOffset),
+      lastLap: formatMilliseconds(82005 + lapOffset),
+      status: "Na pista",
+      ...car,
+      x: Number(car.x) || point.x,
+      y: Number(car.y) || point.y,
+      angle: Number.isFinite(Number(car.angle)) ? Number(car.angle) : point.angle,
+      sector: car.sector || point.sector,
+      carNumber: String(car.carNumber || getCarNumber(car.driver || "Piloto", index)).padStart(2, "0").slice(-2),
+      driver: car.driver || `Piloto ${index + 1}`,
+      team: car.team || currentTeam,
+      gridPosition: index + 1
+    };
+  });
+}
+
+function addTrackCar(trackCar) {
+  const cars = getSavedTrackCars();
+  const point = trackCarPoints[cars.length % trackCarPoints.length];
+  const lapOffset = Math.min(cars.length * 370, 7200);
+  const newCar = {
+    id: Date.now(),
+    race: "Interlagos GP",
+    bestLap: formatMilliseconds(81348 + lapOffset),
+    lastLap: formatMilliseconds(82005 + lapOffset),
+    status: "Na pista",
+    x: point.x,
+    y: point.y,
+    angle: point.angle,
+    sector: trackCar.sector || point.sector,
+    ...trackCar
+  };
+
+  saveTrackCars([...cars, newCar]);
+  return newCar;
 }
 
 function createTelemetry(race, index) {
@@ -1258,6 +1423,7 @@ function createTelemetry(race, index) {
     carNumber: getCarNumber(race.driver, index)
   };
 }
+
 
 function easeOutCubic(value) {
   return 1 - Math.pow(1 - value, 3);

@@ -158,12 +158,46 @@
 
               <g id="trackCars" class="track-cars"></g>
             </svg>
+
+            <form class="track-car-form" id="trackCarForm">
+              <label>
+                <span>Piloto</span>
+                <input type="text" name="driverName" value="Raphael Galhardo" maxlength="40" autocomplete="off" data-mask="name" required>
+              </label>
+              <label>
+                <span>Equipe</span>
+                <select name="teamName" required>
+                  <option value="Racing Angels" selected>Racing Angels</option>
+                  <option value="Sakura Racing">Sakura Racing</option>
+                  <option value="Apex Storms">Apex Storms</option>
+                  <option value="Apex Racing">Apex Racing</option>
+                  <option value="Kerberus">Kerberus</option>
+                  <option value="Wind Speed">Wind Speed</option>
+                  <option value="Cowabunga">Cowabunga</option>
+                  <option value="Septem">Septem</option>
+                </select>
+              </label>
+              <label>
+                <span>Numero</span>
+                <input type="text" name="carNumber" value="07" maxlength="2" inputmode="numeric" autocomplete="off" data-mask="integer" required>
+              </label>
+              <label>
+                <span>Setor</span>
+                <select name="sector">
+                  <option value="S1">S1</option>
+                  <option value="S2" selected>S2</option>
+                  <option value="S3">S3</option>
+                </select>
+              </label>
+              <button class="btn btn-primary" type="submit">Adicionar carro</button>
+            </form>
+            <p class="form-message" id="trackCarFormMessage"></p>
           </div>
 
           <aside class="track-telemetry-card texture-panel">
             <p class="dashboard-kicker">Carro selecionado</p>
             <div class="track-driver-row">
-              <h2 id="trackDriver">Lia Torres #00</h2>
+              <h2 id="trackDriver">Raphael Galhardo #07</h2>
               <span class="position-badge" id="trackPosition">P1</span>
             </div>
 
@@ -228,11 +262,20 @@
             </label>
             <label>
               <span>Corredor</span>
-              <input type="text" name="driverName" value="Lia Torres" maxlength="32" autocomplete="off" data-mask="name" required>
+              <input type="text" name="driverName" value="Raphael Galhardo" maxlength="32" autocomplete="off" data-mask="name" required>
             </label>
             <label>
               <span>Equipe</span>
-              <input type="text" name="teamName" value="Racing Angels" maxlength="32" autocomplete="off" data-mask="name" required>
+              <select name="teamName" required>
+                <option value="Racing Angels" selected>Racing Angels</option>
+                <option value="Sakura Racing">Sakura Racing</option>
+                <option value="Apex Storms">Apex Storms</option>
+                <option value="Apex Racing">Apex Racing</option>
+                <option value="Kerberus">Kerberus</option>
+                <option value="Wind Speed">Wind Speed</option>
+                <option value="Cowabunga">Cowabunga</option>
+                <option value="Septem">Septem</option>
+              </select>
             </label>
             <label>
               <span>Voltas</span>
