@@ -1,4 +1,5 @@
 const { execute, inClause, insertAndFind, rows } = require("./helpers");
+const { transaction } = require("../config/database");
 const { mapCar, mapDriver, mapSeason, mapSeasonRound, mapSeasonRoundLap, mapTrack } = require("./mappers");
 
 const seasonColumns = `
@@ -202,7 +203,27 @@ async function createSeasonRoundLap(seasonRoundId, data) {
   return laps[0] || null;
 }
 
-async function listLapsByIds(ids) {
+async function createSeasonRoundLaps(seasonRoundId, laps) {
+  return transaction(async (connection) => {
+    const ids = [];
+
+    for (const lap of laps) {
+      const result = await execute(
+        `
+          INSERT INTO voltas_etapa (etapa_temporada_id, piloto_id, tempo_volta_ms, numero_volta)
+          VALUES (?, ?, ?, ?)
+        `,
+        [seasonRoundId, lap.driverId, lap.lapTimeMs, lap.lapNumber],
+        connection
+      );
+      ids.push(result.insertId);
+    }
+
+    return listLapsByIds(ids, connection);
+  });
+}
+
+async function listLapsByIds(ids, connection = null) {
   if (!ids.length) {
     return [];
   }
@@ -216,7 +237,8 @@ async function listLapsByIds(ids) {
       WHERE l.id IN (${inClause(ids)})
       ORDER BY l.numero_volta ASC, l.id ASC
     `,
-    ids
+    ids,
+    connection
   );
 
   return result.map((row) => attachLapRelations(row));
@@ -256,6 +278,7 @@ module.exports = {
   createSeason,
   createSeasonRound,
   createSeasonRoundLap,
+  createSeasonRoundLaps,
   findSeasonById,
   listSeasonRoundLaps,
   listSeasons

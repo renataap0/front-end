@@ -1,7 +1,8 @@
 const {
   seasonCreateSchema,
   seasonRoundCreateSchema,
-  seasonRoundLapCreateSchema
+  seasonRoundLapCreateSchema,
+  seasonRoundLapsCreateSchema
 } = require("../schemas/domainSchemas");
 const seasonsService = require("../services/seasonsService");
 const { asyncHandler } = require("../utils/asyncHandler");
@@ -30,6 +31,11 @@ const createSeasonRoundLap = asyncHandler(async (request, response) => {
   return created(response, await seasonsService.createSeasonRoundLap(parseId(request.params.id), data, request.user));
 });
 
+const createSeasonRoundLaps = asyncHandler(async (request, response) => {
+  const data = seasonRoundLapsCreateSchema.parse(request.body);
+  return created(response, await seasonsService.createSeasonRoundLaps(parseId(request.params.id), data.laps, request.user));
+});
+
 const listSeasonRoundLaps = asyncHandler(async (request, response) => {
   return response.json(await seasonsService.listSeasonRoundLaps(parseId(request.params.id)));
 });
@@ -38,6 +44,7 @@ module.exports = {
   createSeason,
   createSeasonRound,
   createSeasonRoundLap,
+  createSeasonRoundLaps,
   getSeason,
   listSeasonRoundLaps,
   listSeasons

@@ -26,11 +26,18 @@ async function createCar(data, user) {
 }
 
 async function updateCar(id, data, user) {
-  if (user.role !== "admin") {
-    throw new AppError("Apenas admin pode editar carros.", 403);
+  const currentCar = await carsDao.findCarById(id);
+
+  if (!currentCar) {
+    throw new AppError("Carro nao encontrado.", 404);
   }
 
-  const car = await carsDao.updateCar(id, data);
+  if (user.role === "team" && user.teamId !== currentCar.teamId) {
+    throw new AppError("Usuario sem permissao para editar este carro.", 403);
+  }
+
+  const safeData = user.role === "team" ? { model: data.model } : data;
+  const car = await carsDao.updateCar(id, safeData);
 
   if (!car) {
     throw new AppError("Carro nao encontrado.", 404);

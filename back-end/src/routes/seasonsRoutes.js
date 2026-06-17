@@ -10,6 +10,7 @@ seasonsRoutes.post("/", requireRole("admin", "team"), seasonsController.createSe
 seasonsRoutes.get("/:id", seasonsController.getSeason);
 seasonsRoutes.post("/:id/rounds", requireRole("admin", "team"), seasonsController.createSeasonRound);
 
+seasonRoundsRoutes.post("/:id/laps/bulk", requireRole("admin", "team"), seasonsController.createSeasonRoundLaps);
 seasonRoundsRoutes.post("/:id/laps", requireRole("admin", "team"), seasonsController.createSeasonRoundLap);
 seasonRoundsRoutes.get("/:id/laps", seasonsController.listSeasonRoundLaps);
 

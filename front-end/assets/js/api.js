@@ -63,8 +63,15 @@ window.getRacesApi = (filters = {}) => window.apiFetch(`/races${window.buildQuer
 window.getProductsApi = (filters = {}) => window.apiFetch(`/products${window.buildQueryString(filters)}`);
 window.getDashboardApi = () => window.apiFetch("/dashboard/summary");
 window.getAnalyticsApi = () => window.apiFetch("/analytics");
+window.getSeasonsApi = () => window.apiFetch("/seasons");
+window.getSeasonRoundLapsApi = (id) => window.apiFetch(`/season-rounds/${id}/laps`);
 
 window.updateDriverApi = (id, payload) => window.apiFetch(`/drivers/${id}`, {
+  method: "PUT",
+  body: JSON.stringify(payload)
+});
+
+window.updateCarApi = (id, payload) => window.apiFetch(`/cars/${id}`, {
   method: "PUT",
   body: JSON.stringify(payload)
 });
@@ -95,4 +102,19 @@ window.deleteRaceApi = (id) => window.apiFetch(`/races/${id}`, {
 window.createOrderApi = (payload) => window.apiFetch("/orders", {
   method: "POST",
   body: JSON.stringify(payload)
+});
+
+window.createSeasonApi = (payload) => window.apiFetch("/seasons", {
+  method: "POST",
+  body: JSON.stringify(payload)
+});
+
+window.createSeasonRoundApi = (seasonId, payload) => window.apiFetch(`/seasons/${seasonId}/rounds`, {
+  method: "POST",
+  body: JSON.stringify(payload)
+});
+
+window.createSeasonRoundLapsApi = (roundId, laps) => window.apiFetch(`/season-rounds/${roundId}/laps/bulk`, {
+  method: "POST",
+  body: JSON.stringify({ laps })
 });

@@ -587,6 +587,7 @@ function normalizeApiDriver(driver) {
   return {
     id: driver.id,
     name: driver.name,
+    carId: primaryCar?.id || driver.carId,
     car: primaryCar?.code || primaryCar?.model || driver.car || "Pacote livre",
     status: driver.status || "Titular",
     number: driver.number,
@@ -735,7 +736,9 @@ function buildRaceApiPayload(race) {
   const tracks = getTracks();
   const cars = getCars();
   const driver = findByNormalizedName(drivers, race.driver);
-  const track = findByNormalizedName(tracks, race.track || inferTrackName(race.race, tracks));
+  const track = findByNormalizedName(tracks, race.track || inferTrackName(race.race, tracks))
+    || findByNormalizedName(tracks, race.team)
+    || tracks[0];
   const driverKey = normalizeKey(race.driver);
   const car = cars.find((item) => Number(item.driverId) === Number(driver?.id))
     || cars.find((item) => normalizeKey(item.driver) === driverKey)
@@ -765,7 +768,7 @@ function buildRaceApiPayload(race) {
 
 async function persistRaceToApi(race) {
   if (!isApiAuthenticated() || typeof window.createRaceApi !== "function") {
-    return null;
+    throw new Error("Faca login para salvar a corrida no banco.");
   }
 
   const payload = buildRaceApiPayload(race);
@@ -790,8 +793,8 @@ function buildTrackApiPayload(track) {
 }
 
 async function persistTrackToApi(track, existingTrack) {
-  if (!isApiAuthenticated()) {
-    return null;
+  if (!isApiAuthenticated() || typeof window.createTrackApi !== "function") {
+    throw new Error("Faca login para salvar a pista no banco.");
   }
 
   const payload = buildTrackApiPayload(track);
@@ -806,32 +809,55 @@ async function persistTrackToApi(track, existingTrack) {
 }
 
 async function deleteRaceFromApi(raceId) {
-  if (isApiAuthenticated() && typeof window.deleteRaceApi === "function") {
-    await window.deleteRaceApi(raceId);
+  if (!isApiAuthenticated() || typeof window.deleteRaceApi !== "function") {
+    throw new Error("Faca login para excluir a corrida do banco.");
   }
+
+  await window.deleteRaceApi(raceId);
 }
 
 async function deleteTrackFromApi(trackId) {
-  if (isApiAuthenticated() && typeof window.deleteTrackApi === "function") {
-    await window.deleteTrackApi(trackId);
+  if (!isApiAuthenticated() || typeof window.deleteTrackApi !== "function") {
+    throw new Error("Faca login para excluir a pista do banco.");
   }
+
+  await window.deleteTrackApi(trackId);
 }
 
 async function updateDriverOnApi(driver, field, value) {
-  if (!isApiAuthenticated() || !driver?.id || typeof window.updateDriverApi !== "function") {
-    return null;
+  if (!isApiAuthenticated() || !driver?.id) {
+    throw new Error("Faca login para editar os dados da equipe.");
   }
 
-  if (!["name", "status"].includes(field)) {
-    return null;
+  if (field === "car") {
+    const car = getCars().find((item) =>
+      Number(item.id) === Number(driver.carId)
+      || Number(item.driverId) === Number(driver.id)
+    );
+
+    if (!car?.id || typeof window.updateCarApi !== "function") {
+      throw new Error("Nao encontrei o carro deste piloto no banco.");
+    }
+
+    return {
+      type: "car",
+      data: await window.updateCarApi(car.id, { model: value })
+    };
   }
 
-  return window.updateDriverApi(driver.id, { [field]: value });
+  if (!["name", "status"].includes(field) || typeof window.updateDriverApi !== "function") {
+    throw new Error("Campo nao disponivel para gravacao.");
+  }
+
+  return {
+    type: "driver",
+    data: await window.updateDriverApi(driver.id, { [field]: value })
+  };
 }
 
 async function createOrderOnApi(order, cart, productsByName) {
   if (!isApiAuthenticated() || typeof window.createOrderApi !== "function") {
-    return null;
+    throw new Error("Faca login para registrar o pedido no banco.");
   }
 
   const items = cart.map((item) => ({
@@ -850,6 +876,72 @@ async function createOrderOnApi(order, cart, productsByName) {
     paymentMethod: order.payment,
     items
   });
+}
+
+async function persistProjectedLapsToApi(race) {
+  if (
+    !isApiAuthenticated()
+    || typeof window.getSeasonsApi !== "function"
+    || typeof window.createSeasonRoundLapsApi !== "function"
+  ) {
+    throw new Error("API de temporadas indisponivel.");
+  }
+
+  let seasons = await window.getSeasonsApi();
+  let season = seasons[0];
+
+  if (!season) {
+    if (typeof window.createSeasonApi !== "function") {
+      throw new Error("Nao existe temporada ativa no banco.");
+    }
+
+    const year = new Date().getFullYear();
+    season = await window.createSeasonApi({
+      name: `Temporada ${year}`,
+      year,
+      status: "Ativa"
+    });
+    seasons = [season];
+  }
+
+  let round = season.rounds?.find((item) => Number(item.trackId) === Number(race.trackId));
+
+  if (!round) {
+    if (typeof window.createSeasonRoundApi !== "function") {
+      throw new Error("Nao encontrei uma etapa para esta pista.");
+    }
+
+    round = await window.createSeasonRoundApi(season.id, {
+      trackId: Number(race.trackId),
+      name: race.track || race.race,
+      roundNumber: (season.rounds?.length || 0) + 1
+    });
+  }
+
+  const existingLaps = typeof window.getSeasonRoundLapsApi === "function"
+    ? await window.getSeasonRoundLapsApi(round.id)
+    : [];
+  const lastLapNumber = existingLaps
+    .filter((lap) => Number(lap.driverId) === Number(race.driverId))
+    .reduce((highest, lap) => Math.max(highest, Number(lap.lapNumber) || 0), 0);
+  const lapTimesMs = generateLapTimesMsFromBestLast(
+    race.laps,
+    parseLapTime(race.bestLap),
+    parseLapTime(race.lastLap),
+    "projected"
+  );
+  const laps = lapTimesMs.map((lapTimeMs, index) => ({
+    driverId: Number(race.driverId),
+    carId: Number(race.carId) || null,
+    lapNumber: lastLapNumber + index + 1,
+    lapTimeMs: Math.round(lapTimeMs)
+  }));
+
+  if (!laps.length) {
+    return [];
+  }
+
+  return window.createSeasonRoundLapsApi(round.id, laps);
 }
 
 function getCurrentRole() {
@@ -1673,6 +1765,7 @@ function renderDriverEditors() {
 
 function setupDriverEditor() {
   const driverEditorGrid = document.getElementById("driverEditorGrid");
+  const driverSaveMessage = document.getElementById("driverSaveMessage");
 
   if (!driverEditorGrid) {
     return;
@@ -1688,20 +1781,50 @@ function setupDriverEditor() {
 
     const drivers = getDrivers();
     const driver = drivers[index];
-    drivers[index][field] = event.target.value;
-    saveDrivers(drivers);
-    updateDashboardMetrics();
+    const previousValue = driver[field];
+    const nextValue = event.target.value;
 
-    if (event.type === "change") {
-      try {
-        await updateDriverOnApi(driver, field, event.target.value);
-      } catch (error) {
-        console.warn("Nao foi possivel atualizar piloto na API.", error);
+    event.target.disabled = true;
+
+    if (driverSaveMessage) {
+      driverSaveMessage.textContent = "Salvando alteracao no banco...";
+    }
+
+    try {
+      const result = await updateDriverOnApi(driver, field, nextValue);
+      drivers[index][field] = nextValue;
+
+      if (result.type === "car") {
+        const normalizedCar = normalizeApiCar(result.data);
+        saveCars(upsertById(getCars(), normalizedCar));
+        drivers[index].carId = normalizedCar.id;
       }
+
+      if (field === "name") {
+        saveCars(getCars().map((car) => (
+          Number(car.driverId) === Number(driver.id)
+            ? { ...car, driver: nextValue }
+            : car
+        )));
+      }
+
+      saveDrivers(drivers);
+      updateDashboardMetrics();
+
+      if (driverSaveMessage) {
+        driverSaveMessage.textContent = "Alteracao salva automaticamente no banco.";
+      }
+    } catch (error) {
+      event.target.value = previousValue;
+
+      if (driverSaveMessage) {
+        driverSaveMessage.textContent = error.message || "Nao foi possivel salvar a alteracao no banco.";
+      }
+    } finally {
+      event.target.disabled = false;
     }
   }
 
-  driverEditorGrid.addEventListener("input", updateDriverData);
   driverEditorGrid.addEventListener("change", updateDriverData);
 }
 
@@ -1784,6 +1907,7 @@ function setupManualRaceForm() {
     const lastLapRaw = formData.get("lastLap").trim();
 
     const allLapsMode = formData.get("allLapsMode") || "projected";
+    const submitButton = manualRaceForm.querySelector('button[type="submit"]');
 
     const newRace = {
       id: Date.now(),
@@ -1799,36 +1923,52 @@ function setupManualRaceForm() {
     };
 
     let persistedRace = null;
-    let apiMessage = "";
 
     try {
+      if (submitButton) {
+        submitButton.disabled = true;
+      }
+
+      if (raceFormMessage) {
+        raceFormMessage.textContent = "Salvando corrida no banco...";
+      }
+
       persistedRace = await persistRaceToApi(newRace);
+      let savedLaps = [];
+
+      if (allLapsMode === "projected") {
+        if (raceFormMessage) {
+          raceFormMessage.textContent = "Corrida salva. Registrando todas as voltas no banco...";
+        }
+
+        savedLaps = await persistProjectedLapsToApi(persistedRace);
+        upsertSeasonRoundFromManualRace(persistedRace);
+      }
+
+      updateDashboardMetrics();
+      renderTrackCars();
+      updateTrackMonitor();
+      renderGridPage();
+      renderAnalyticsPage();
+
+      if (raceFormMessage) {
+        const lapMessage = savedLaps.length ? ` ${savedLaps.length} voltas registradas.` : "";
+        raceFormMessage.textContent = `Corrida salva automaticamente no banco.${lapMessage}`;
+      }
     } catch (error) {
-      apiMessage = ` Banco nao salvou: ${error.message}`;
-    }
+      updateDashboardMetrics();
+      renderGridPage();
+      renderAnalyticsPage();
 
-    if (!persistedRace) {
-      const races = getRaces();
-      races.push(newRace);
-      saveRaces(races);
-    }
-
-    // campeonato: registra todas as voltas (MVP via geração a partir de best/last)
-    if (allLapsMode === "projected") {
-      upsertSeasonRoundFromManualRace(persistedRace || newRace);
-    }
-
-    updateDashboardMetrics();
-    renderTrackCars();
-    updateTrackMonitor();
-    renderGridPage();
-    renderAnalyticsPage();
-
-
-    if (raceFormMessage) {
-      raceFormMessage.textContent = persistedRace
-        ? `Corrida adicionada no banco. Melhor volta: ${persistedRace.bestLap}.`
-        : `Corrida salva localmente. Melhor volta: ${newRace.bestLap}.${apiMessage}`;
+      if (raceFormMessage) {
+        raceFormMessage.textContent = persistedRace
+          ? `A corrida foi salva, mas as voltas nao foram concluidas: ${error.message}`
+          : `Nao foi possivel salvar a corrida: ${error.message}`;
+      }
+    } finally {
+      if (submitButton) {
+        submitButton.disabled = false;
+      }
     }
   });
 }
@@ -2792,30 +2932,32 @@ function setupTracksPage() {
       const tracks = getTracks();
       const existingTrackIndex = tracks.findIndex((track) => normalizeKey(track.name) === normalizeKey(newTrack.name));
       const existingTrack = existingTrackIndex >= 0 ? tracks[existingTrackIndex] : null;
-      let persistedTrack = null;
-      let apiMessage = "";
+      const submitButton = trackForm.querySelector('button[type="submit"]');
 
       try {
-        persistedTrack = await persistTrackToApi(newTrack, existingTrack);
+        if (submitButton) {
+          submitButton.disabled = true;
+        }
+
+        if (trackFormMessage) {
+          trackFormMessage.textContent = "Salvando pista no banco...";
+        }
+
+        const persistedTrack = await persistTrackToApi(newTrack, existingTrack);
+        renderTrackList();
+        trackForm.reset();
+
+        if (trackFormMessage) {
+          trackFormMessage.textContent = `${persistedTrack.name} salva automaticamente no banco.`;
+        }
       } catch (error) {
-        apiMessage = ` Banco nao salvou: ${error.message}`;
-      }
-
-      if (existingTrackIndex >= 0) {
-        newTrack.id = tracks[existingTrackIndex].id;
-        tracks[existingTrackIndex] = persistedTrack || newTrack;
-      } else {
-        tracks.push(persistedTrack || newTrack);
-      }
-
-      saveTracks(tracks);
-      renderTrackList();
-      trackForm.reset();
-
-      if (trackFormMessage) {
-        trackFormMessage.textContent = persistedTrack
-          ? `${persistedTrack.name} salva no banco e pronta para analise.`
-          : `${newTrack.name} salva localmente e pronta para analise.${apiMessage}`;
+        if (trackFormMessage) {
+          trackFormMessage.textContent = `Nao foi possivel salvar a pista: ${error.message}`;
+        }
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+        }
       }
     });
   }
@@ -3216,24 +3358,28 @@ function setupShopPage() {
 
     checkoutButton.disabled = true;
     let persistedOrder = null;
-    let apiMessage = isApiAuthenticated() ? "" : " Faca login para gravar no banco.";
 
-    if (isApiAuthenticated()) {
-      try {
-        persistedOrder = await createOrderOnApi(order, cart, products);
-        order.code = persistedOrder?.code || order.code;
-        order.apiId = persistedOrder?.id;
-        order.totals = persistedOrder
-          ? {
-              subtotal: Number(persistedOrder.subtotal) || totals.subtotal,
-              shipping: Number(persistedOrder.shipping) || totals.shipping,
-              total: Number(persistedOrder.total) || totals.total,
-              quantity: totals.quantity
-            }
-          : totals;
-      } catch (error) {
-        apiMessage = ` Banco nao salvou: ${error.message}`;
+    try {
+      if (checkoutMessage) {
+        checkoutMessage.textContent = "Registrando pedido no banco...";
       }
+
+      persistedOrder = await createOrderOnApi(order, cart, products);
+      order.code = persistedOrder.code || order.code;
+      order.apiId = persistedOrder.id;
+      order.totals = {
+        subtotal: Number(persistedOrder.subtotal) || totals.subtotal,
+        shipping: Number(persistedOrder.shipping) || totals.shipping,
+        total: Number(persistedOrder.total) || totals.total,
+        quantity: totals.quantity
+      };
+    } catch (error) {
+      checkoutButton.disabled = false;
+
+      if (checkoutMessage) {
+        checkoutMessage.textContent = `Pedido nao finalizado: ${error.message}`;
+      }
+      return;
     }
 
     saveOrder(order);
@@ -3243,9 +3389,7 @@ function setupShopPage() {
     updatePaymentFields();
 
     if (checkoutMessage) {
-      checkoutMessage.textContent = persistedOrder
-        ? `Pedido ${order.code} registrado no banco no total de ${formatCurrency(order.totals.total)}.`
-        : `Pedido ${orderCode} salvo localmente no total de ${formatCurrency(totals.total)}.${apiMessage}`;
+      checkoutMessage.textContent = `Pedido ${order.code} registrado no banco no total de ${formatCurrency(order.totals.total)}.`;
     }
   });
 

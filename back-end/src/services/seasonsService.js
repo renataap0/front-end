@@ -36,6 +36,11 @@ async function createSeasonRoundLap(seasonRoundId, data, user) {
   return seasonsDao.createSeasonRoundLap(seasonRoundId, data);
 }
 
+async function createSeasonRoundLaps(seasonRoundId, laps, user) {
+  assertCanWriteSeason(user);
+  return seasonsDao.createSeasonRoundLaps(seasonRoundId, laps);
+}
+
 async function listSeasonRoundLaps(seasonRoundId) {
   return seasonsDao.listSeasonRoundLaps(seasonRoundId);
 }
@@ -44,6 +49,7 @@ module.exports = {
   createSeason,
   createSeasonRound,
   createSeasonRoundLap,
+  createSeasonRoundLaps,
   getSeason,
   listSeasonRoundLaps,
   listSeasons

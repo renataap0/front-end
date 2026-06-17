@@ -90,6 +90,10 @@ const seasonRoundLapCreateSchema = z.object({
   lapTimeMs: positiveInt
 });
 
+const seasonRoundLapsCreateSchema = z.object({
+  laps: z.array(seasonRoundLapCreateSchema).min(1).max(500)
+});
+
 const productCreateSchema = z.object({
   name: text,
   description: optionalText,
@@ -125,6 +129,7 @@ module.exports = {
   seasonCreateSchema,
   seasonRoundCreateSchema,
   seasonRoundLapCreateSchema,
+  seasonRoundLapsCreateSchema,
   teamCreateSchema,
   teamUpdateSchema: teamCreateSchema.partial(),
   trackCreateSchema,
