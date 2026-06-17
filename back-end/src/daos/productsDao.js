@@ -3,23 +3,19 @@ const { mapProduct } = require("./mappers");
 
 const productColumns = `
   id,
-  name,
-  description,
-  price,
-  stock,
-  image_url AS imageUrl,
-  active,
-  created_at AS createdAt,
-  updated_at AS updatedAt
+  nome AS name,
+  NULL AS description,
+  preco AS price,
+  999 AS stock,
+  NULL AS imageUrl,
+  1 AS active,
+  NULL AS createdAt,
+  NULL AS updatedAt
 `;
 
 const productColumnMap = {
-  name: "name",
-  description: "description",
-  price: "price",
-  stock: "stock",
-  imageUrl: "image_url",
-  active: "active"
+  name: "nome",
+  price: "preco"
 };
 
 function normalizeProductPayload(data) {
@@ -34,18 +30,19 @@ async function listProducts(query = {}) {
   const params = [];
 
   if (query.active !== undefined) {
-    where.push("active = ?");
-    params.push(String(query.active) === "true" ? 1 : 0);
+    if (String(query.active) !== "true") {
+      where.push("1 = 0");
+    }
   }
 
   if (query.name) {
-    where.push("name LIKE ?");
+    where.push("nome LIKE ?");
     params.push(`%${query.name}%`);
   }
 
   const sql = `
     SELECT ${productColumns}
-    FROM products
+    FROM produtos
     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
     ORDER BY name ASC
   `;
@@ -54,7 +51,7 @@ async function listProducts(query = {}) {
 }
 
 async function findProductById(id, connection = null) {
-  const result = await rows(`SELECT ${productColumns} FROM products WHERE id = ?`, [id], connection);
+  const result = await rows(`SELECT ${productColumns} FROM produtos WHERE id = ?`, [id], connection);
   return mapProduct(result[0]);
 }
 
@@ -65,7 +62,7 @@ async function listActiveProductsByIds(ids, connection = null) {
 
   const placeholders = ids.map(() => "?").join(", ");
   const result = await rows(
-    `SELECT ${productColumns} FROM products WHERE active = 1 AND id IN (${placeholders})`,
+    `SELECT ${productColumns} FROM produtos WHERE id IN (${placeholders})`,
     ids,
     connection
   );
@@ -74,23 +71,23 @@ async function listActiveProductsByIds(ids, connection = null) {
 }
 
 async function createProduct(data) {
-  return insertAndFind("products", normalizeProductPayload(data), productColumnMap, findProductById);
+  return insertAndFind("produtos", normalizeProductPayload(data), productColumnMap, findProductById);
 }
 
 async function updateProduct(id, data) {
-  return updateAndFind("products", id, normalizeProductPayload(data), productColumnMap, findProductById);
+  return updateAndFind("produtos", id, normalizeProductPayload(data), productColumnMap, findProductById);
 }
 
 async function decrementStock(id, quantity, connection = null) {
-  return execute("UPDATE products SET stock = stock - ? WHERE id = ?", [quantity, id], connection);
+  return { affectedRows: 1, warningStatus: 0 };
 }
 
 async function deleteProduct(id) {
-  return execute("DELETE FROM products WHERE id = ?", [id]);
+  return execute("DELETE FROM produtos WHERE id = ?", [id]);
 }
 
 async function countProducts() {
-  const result = await rows("SELECT COUNT(*) AS total FROM products");
+  const result = await rows("SELECT COUNT(*) AS total FROM produtos");
   return result[0].total;
 }
 

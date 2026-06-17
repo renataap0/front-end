@@ -3,28 +3,28 @@ const { mapOrder, mapOrderItem, mapProduct, mapUser } = require("./mappers");
 
 const orderColumns = `
   o.id,
-  o.code,
-  o.user_id AS userId,
-  o.customer_name AS customerName,
-  o.customer_email AS customerEmail,
-  o.customer_zip AS customerZip,
-  o.payment_method AS paymentMethod,
-  o.subtotal,
-  o.shipping,
-  o.total,
-  o.status,
-  o.created_at AS createdAt,
-  o.updated_at AS updatedAt
+  CONCAT('RA-', LPAD(o.id, 6, '0')) AS code,
+  o.usuario_id AS userId,
+  u.nome_usuario AS customerName,
+  '' AS customerEmail,
+  '' AS customerZip,
+  'site' AS paymentMethod,
+  o.valor_total AS subtotal,
+  o.valor_frete AS shipping,
+  (o.valor_total + o.valor_frete) AS total,
+  'aprovado' AS status,
+  o.criado_em AS createdAt,
+  NULL AS updatedAt
 `;
 
 const userJoinColumns = `
   u.id AS user_id,
-  u.username AS user_username,
-  u.role AS user_role,
-  u.team_id AS user_teamId,
-  u.driver_id AS user_driverId,
-  u.created_at AS user_createdAt,
-  u.updated_at AS user_updatedAt
+  u.nome_usuario AS user_username,
+  u.perfil AS user_role,
+  p.equipe_id AS user_teamId,
+  p.id AS user_driverId,
+  u.criado_em AS user_createdAt,
+  NULL AS user_updatedAt
 `;
 
 function attachOrderUser(row) {
@@ -48,23 +48,23 @@ async function attachItems(orders, connection = null) {
     `
       SELECT
         oi.id,
-        oi.order_id AS orderId,
-        oi.product_id AS productId,
-        oi.quantity,
-        oi.unit_price AS unitPrice,
-        oi.total,
+        oi.pedido_id AS orderId,
+        oi.produto_id AS productId,
+        oi.quantidade AS quantity,
+        oi.preco_unitario AS unitPrice,
+        (oi.quantidade * oi.preco_unitario) AS total,
         p.id AS product_id,
-        p.name AS product_name,
-        p.description AS product_description,
-        p.price AS product_price,
-        p.stock AS product_stock,
-        p.image_url AS product_imageUrl,
-        p.active AS product_active,
-        p.created_at AS product_createdAt,
-        p.updated_at AS product_updatedAt
-      FROM order_items oi
-      INNER JOIN products p ON p.id = oi.product_id
-      WHERE oi.order_id IN (${inClause(orderIds)})
+        p.nome AS product_name,
+        NULL AS product_description,
+        p.preco AS product_price,
+        999 AS product_stock,
+        NULL AS product_imageUrl,
+        1 AS product_active,
+        NULL AS product_createdAt,
+        NULL AS product_updatedAt
+      FROM itens_pedido oi
+      INNER JOIN produtos p ON p.id = oi.produto_id
+      WHERE oi.pedido_id IN (${inClause(orderIds)})
       ORDER BY oi.id ASC
     `,
     orderIds,
@@ -91,7 +91,7 @@ async function attachItems(orders, connection = null) {
 }
 
 function whereForUser(user) {
-  return user.role === "admin" ? { sql: "", params: [] } : { sql: "WHERE o.user_id = ?", params: [user.id] };
+  return user.role === "admin" ? { sql: "", params: [] } : { sql: "WHERE o.usuario_id = ?", params: [user.id] };
 }
 
 async function listOrders(user) {
@@ -99,10 +99,11 @@ async function listOrders(user) {
   const result = await rows(
     `
       SELECT ${orderColumns}, ${userJoinColumns}
-      FROM orders o
-      INNER JOIN users u ON u.id = o.user_id
+      FROM pedidos o
+      INNER JOIN usuarios u ON u.id = o.usuario_id
+      LEFT JOIN pilotos p ON p.usuario_id = u.id
       ${filter.sql}
-      ORDER BY o.created_at DESC
+      ORDER BY o.criado_em DESC
     `,
     filter.params
   );
@@ -111,14 +112,15 @@ async function listOrders(user) {
 }
 
 async function findOrderById(id, user = null, connection = null) {
-  const filter = user && user.role !== "admin" ? "AND o.user_id = ?" : "";
+  const filter = user && user.role !== "admin" ? "AND o.usuario_id = ?" : "";
   const params = user && user.role !== "admin" ? [id, user.id] : [id];
 
   const result = await rows(
     `
       SELECT ${orderColumns}, ${userJoinColumns}
-      FROM orders o
-      INNER JOIN users u ON u.id = o.user_id
+      FROM pedidos o
+      INNER JOIN usuarios u ON u.id = o.usuario_id
+      LEFT JOIN pilotos p ON p.usuario_id = u.id
       WHERE o.id = ? ${filter}
     `,
     params,
@@ -132,21 +134,13 @@ async function findOrderById(id, user = null, connection = null) {
 async function createOrder(data, items, connection) {
   const orderResult = await execute(
     `
-      INSERT INTO orders
-        (code, user_id, customer_name, customer_email, customer_zip, payment_method, subtotal, shipping, total, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO pedidos (usuario_id, valor_total, valor_frete)
+      VALUES (?, ?, ?)
     `,
     [
-      data.code,
       data.userId,
-      data.customerName,
-      data.customerEmail,
-      data.customerZip,
-      data.paymentMethod,
       data.subtotal,
-      data.shipping,
-      data.total,
-      data.status || "aprovado"
+      data.shipping
     ],
     connection
   );
@@ -154,10 +148,10 @@ async function createOrder(data, items, connection) {
   for (const item of items) {
     await execute(
       `
-        INSERT INTO order_items (order_id, product_id, quantity, unit_price, total)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO itens_pedido (pedido_id, produto_id, quantidade, preco_unitario)
+        VALUES (?, ?, ?, ?)
       `,
-      [orderResult.insertId, item.product.id, item.quantity, item.unitPrice, item.total],
+      [orderResult.insertId, item.product.id, item.quantity, item.unitPrice],
       connection
     );
   }
@@ -166,12 +160,12 @@ async function createOrder(data, items, connection) {
 }
 
 async function countOrders() {
-  const result = await rows("SELECT COUNT(*) AS total FROM orders");
+  const result = await rows("SELECT COUNT(*) AS total FROM pedidos");
   return result[0].total;
 }
 
 async function sumRevenue() {
-  const result = await rows("SELECT COALESCE(SUM(total), 0) AS total FROM orders");
+  const result = await rows("SELECT COALESCE(SUM(valor_total + valor_frete), 0) AS total FROM pedidos");
   return Number(result[0].total);
 }
 

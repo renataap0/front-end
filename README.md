@@ -82,15 +82,21 @@ copy .env.example .env
 Configure a conexao com o MySQL:
 
 ```env
-DATABASE_URL="mysql://root:root@localhost:3306/racing_angels"
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=root
+DB_NAME=corridapro
+DB_CONNECTION_LIMIT=10
+
+PORT=3000
 JWT_SECRET="troque_essa_chave"
-PORT=3333
 ```
 
 Crie o banco no MySQL:
 
 ```sql
-CREATE DATABASE racing_angels;
+CREATE DATABASE corridapro;
 ```
 
 Crie as tabelas e carregue os dados iniciais:
@@ -99,7 +105,7 @@ Crie as tabelas e carregue os dados iniciais:
 npm run db:setup
 ```
 
-Atencao: `npm run db:setup` recria as tabelas do banco configurado em `DATABASE_URL`.
+Atencao: `npm run db:setup` recria as tabelas do banco configurado em `DB_NAME`.
 
 Inicie a API:
 
@@ -110,7 +116,7 @@ npm run dev
 A API fica disponivel em:
 
 ```txt
-http://localhost:3333
+http://localhost:3000
 ```
 
 ## Como rodar o front-end
@@ -240,7 +246,7 @@ Regras importantes:
 ## Teste rapido de login
 
 ```bash
-curl -X POST http://localhost:3333/api/auth/login ^
+curl -X POST http://localhost:3000/api/auth/login ^
   -H "Content-Type: application/json" ^
   -d "{\"username\":\"admin\",\"password\":\"123456\"}"
 ```
@@ -248,7 +254,7 @@ curl -X POST http://localhost:3333/api/auth/login ^
 A resposta retorna um token JWT. Use esse token nas rotas protegidas:
 
 ```bash
-curl http://localhost:3333/api/races ^
+curl http://localhost:3000/api/races ^
   -H "Authorization: Bearer SEU_TOKEN"
 ```
 
@@ -258,14 +264,14 @@ O modelo esta em `back-end/database/schema.sql`.
 
 Tabelas principais:
 
-- `users`: usuarios e perfis de acesso.
-- `teams`: equipes.
-- `drivers`: pilotos.
-- `cars`: carros.
-- `tracks`: pistas.
-- `races`: corridas.
-- `seasons`, `season_rounds`, `season_round_laps`: temporada, etapas e voltas.
-- `products`, `orders`, `order_items`: loja e pedidos.
+- `usuarios`: usuarios e perfis de acesso.
+- `equipes`: equipes.
+- `pilotos`: pilotos.
+- `carros`: carros.
+- `pistas`: pistas.
+- `corridas`: corridas.
+- `temporadas`, `etapas_temporada`, `voltas_etapa`: temporada, etapas e voltas.
+- `produtos`, `pedidos`, `itens_pedido`: loja e pedidos.
 
 O seed esta em `back-end/database/seed.js` e cria dados iniciais alinhados ao front-end: equipes, pilotos, carros, pistas, corridas, temporada, voltas, produtos e usuarios de teste.
 

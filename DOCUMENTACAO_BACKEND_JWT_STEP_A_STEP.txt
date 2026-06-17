@@ -5,8 +5,8 @@ DOCUMENTACAO DO BACKEND - JavaScript + JWT + MySQL + DAOs
 - Banco: MySQL.
 - Acesso ao banco: mysql2/promise com camada DAO em back-end/src/daos.
 - Autenticacao: JWT.
-- Porta padrao: http://localhost:3333.
-- Base da API: http://localhost:3333/api.
+- Porta padrao: http://localhost:3000.
+- Base da API: http://localhost:3000/api.
 
 2) Como o backend esta organizado
 - back-end/src/server.js
@@ -31,10 +31,10 @@ DOCUMENTACAO DO BACKEND - JavaScript + JWT + MySQL + DAOs
   env.js le .env; database.js cria pool MySQL.
 
 - back-end/database/schema.sql
-  DDL das tabelas MySQL.
+  DDL do banco corridapro com tabelas em portugues: usuarios, equipes, pilotos, carros, pistas, corridas, temporadas, etapas_temporada, voltas_etapa, produtos, pedidos e itens_pedido.
 
 - back-end/database/seed.js
-  Cria o database do DATABASE_URL, recria tabelas e popula dados iniciais alinhados ao front-end.
+  Cria o database configurado em DB_NAME, recria tabelas e popula dados iniciais alinhados ao front-end.
 
 3) Fluxo de inicializacao
 1. server.js importa app.js.
@@ -48,9 +48,15 @@ DOCUMENTACAO DO BACKEND - JavaScript + JWT + MySQL + DAOs
 4) Variaveis de ambiente
 Arquivo: back-end/.env
 
-DATABASE_URL="mysql://root:root@localhost:3306/racing_angels"
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=root
+DB_NAME=corridapro
+DB_CONNECTION_LIMIT=10
+
+PORT=3000
 JWT_SECRET="troque_essa_chave"
-PORT=3333
 
 5) Como preparar o banco
 Entre na pasta back-end:
@@ -58,7 +64,7 @@ Entre na pasta back-end:
 npm install
 npm run db:setup
 
-Atencao: npm run db:setup recria as tabelas do banco configurado em DATABASE_URL.
+Atencao: npm run db:setup recria as tabelas do banco configurado em DB_NAME.
 
 6) Como iniciar a API
 Modo desenvolvimento:
@@ -192,7 +198,7 @@ Analytics e Dashboard:
 
 11) Contrato usado pelo front-end
 O front-end chama back-end/front-end/assets/js/api.js com:
-- API_BASE_URL = http://localhost:3333/api
+- API_BASE_URL = http://localhost:3000/api
 - Authorization: Bearer TOKEN salvo em localStorage
 
 Campos importantes mantidos para o front:

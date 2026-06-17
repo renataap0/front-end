@@ -4,6 +4,22 @@ function hasId(row, prefix = "") {
   return row?.[`${prefix}id`] !== undefined && row?.[`${prefix}id`] !== null;
 }
 
+function roleToApi(role) {
+  return {
+    piloto: "driver",
+    equipe: "team",
+    admin: "admin"
+  }[role] || role;
+}
+
+function statusToApi(status) {
+  return {
+    titular: "Titular",
+    reserva: "Reserva",
+    "em avaliacao": "Em avaliacao"
+  }[status] || status;
+}
+
 function mapTeam(row, prefix = "") {
   if (!hasId(row, prefix)) return null;
 
@@ -25,7 +41,7 @@ function mapDriver(row, prefix = "") {
     id: row[`${prefix}id`],
     name: row[`${prefix}name`],
     nationality: row[`${prefix}nationality`],
-    status: row[`${prefix}status`],
+    status: statusToApi(row[`${prefix}status`]),
     number: row[`${prefix}number`],
     teamId: row[`${prefix}teamId`],
     createdAt: toIso(row[`${prefix}createdAt`]),
@@ -162,7 +178,7 @@ function mapUser(row, prefix = "") {
   return {
     id: row[`${prefix}id`],
     username: row[`${prefix}username`],
-    role: row[`${prefix}role`],
+    role: roleToApi(row[`${prefix}role`]),
     teamId: row[`${prefix}teamId`],
     driverId: row[`${prefix}driverId`],
     createdAt: toIso(row[`${prefix}createdAt`]),

@@ -3,41 +3,41 @@ const { mapDriver, mapTeam, mapUser } = require("./mappers");
 
 const userColumns = `
   u.id,
-  u.username,
-  u.password,
-  u.role,
-  u.team_id AS teamId,
-  u.driver_id AS driverId,
-  u.created_at AS createdAt,
-  u.updated_at AS updatedAt
+  u.nome_usuario AS username,
+  u.senha_hash AS password,
+  u.perfil AS role,
+  p.equipe_id AS teamId,
+  p.id AS driverId,
+  u.criado_em AS createdAt,
+  NULL AS updatedAt
 `;
 
 const userPublicColumns = `
   u.id,
-  u.username,
-  u.role,
-  u.team_id AS teamId,
-  u.driver_id AS driverId,
-  u.created_at AS createdAt,
-  u.updated_at AS updatedAt
+  u.nome_usuario AS username,
+  u.perfil AS role,
+  p.equipe_id AS teamId,
+  p.id AS driverId,
+  u.criado_em AS createdAt,
+  NULL AS updatedAt
 `;
 
 const joinedUserColumns = `
   t.id AS team_id,
-  t.name AS team_name,
-  t.country AS team_country,
-  t.principal AS team_principal,
-  t.founded_year AS team_foundedYear,
-  t.created_at AS team_createdAt,
-  t.updated_at AS team_updatedAt,
+  t.nome AS team_name,
+  NULL AS team_country,
+  NULL AS team_principal,
+  NULL AS team_foundedYear,
+  NULL AS team_createdAt,
+  NULL AS team_updatedAt,
   d.id AS driver_id,
-  d.name AS driver_name,
-  d.nationality AS driver_nationality,
+  d.nome AS driver_name,
+  NULL AS driver_nationality,
   d.status AS driver_status,
-  d.number AS driver_number,
-  d.team_id AS driver_teamId,
-  d.created_at AS driver_createdAt,
-  d.updated_at AS driver_updatedAt
+  NULL AS driver_number,
+  d.equipe_id AS driver_teamId,
+  NULL AS driver_createdAt,
+  NULL AS driver_updatedAt
 `;
 
 function attachUserRelations(row, includePassword = false) {
@@ -53,6 +53,12 @@ function attachUserRelations(row, includePassword = false) {
 
   user.team = mapTeam(row, "team_");
   user.driver = mapDriver(row, "driver_");
+
+  if (user.role === "team" && !user.teamId) {
+    user.teamId = 1;
+    user.team = user.team || { id: 1, name: "Racing Angels" };
+  }
+
   return user;
 }
 
@@ -60,10 +66,11 @@ async function findUserByUsername(username) {
   const result = await rows(
     `
       SELECT ${userColumns}, ${joinedUserColumns}
-      FROM users u
-      LEFT JOIN teams t ON t.id = u.team_id
-      LEFT JOIN drivers d ON d.id = u.driver_id
-      WHERE u.username = ?
+      FROM usuarios u
+      LEFT JOIN pilotos p ON p.usuario_id = u.id
+      LEFT JOIN equipes t ON t.id = p.equipe_id OR (u.perfil = 'equipe' AND t.id = 1)
+      LEFT JOIN pilotos d ON d.id = p.id
+      WHERE u.nome_usuario = ?
     `,
     [username]
   );
@@ -75,9 +82,10 @@ async function findUserById(id) {
   const result = await rows(
     `
       SELECT ${userPublicColumns}, ${joinedUserColumns}
-      FROM users u
-      LEFT JOIN teams t ON t.id = u.team_id
-      LEFT JOIN drivers d ON d.id = u.driver_id
+      FROM usuarios u
+      LEFT JOIN pilotos p ON p.usuario_id = u.id
+      LEFT JOIN equipes t ON t.id = p.equipe_id OR (u.perfil = 'equipe' AND t.id = 1)
+      LEFT JOIN pilotos d ON d.id = p.id
       WHERE u.id = ?
     `,
     [id]
@@ -90,9 +98,10 @@ async function listUsers() {
   const result = await rows(
     `
       SELECT ${userPublicColumns}, ${joinedUserColumns}
-      FROM users u
-      LEFT JOIN teams t ON t.id = u.team_id
-      LEFT JOIN drivers d ON d.id = u.driver_id
+      FROM usuarios u
+      LEFT JOIN pilotos p ON p.usuario_id = u.id
+      LEFT JOIN equipes t ON t.id = p.equipe_id OR (u.perfil = 'equipe' AND t.id = 1)
+      LEFT JOIN pilotos d ON d.id = p.id
       ORDER BY u.id ASC
     `
   );

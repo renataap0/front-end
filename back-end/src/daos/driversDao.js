@@ -3,43 +3,54 @@ const { mapDriver, mapTeam } = require("./mappers");
 
 const driverColumns = `
   d.id,
-  d.name,
-  d.nationality,
+  d.nome AS name,
+  NULL AS nationality,
   d.status,
-  d.number,
-  d.team_id AS teamId,
-  d.created_at AS createdAt,
-  d.updated_at AS updatedAt
+  NULL AS number,
+  d.equipe_id AS teamId,
+  NULL AS createdAt,
+  NULL AS updatedAt
 `;
 
 const driverPlainColumns = `
   id,
-  name,
-  nationality,
+  nome AS name,
+  NULL AS nationality,
   status,
-  number,
-  team_id AS teamId,
-  created_at AS createdAt,
-  updated_at AS updatedAt
+  NULL AS number,
+  equipe_id AS teamId,
+  NULL AS createdAt,
+  NULL AS updatedAt
 `;
 
 const teamJoinColumns = `
   t.id AS team_id,
-  t.name AS team_name,
-  t.country AS team_country,
-  t.principal AS team_principal,
-  t.founded_year AS team_foundedYear,
-  t.created_at AS team_createdAt,
-  t.updated_at AS team_updatedAt
+  t.nome AS team_name,
+  NULL AS team_country,
+  NULL AS team_principal,
+  NULL AS team_foundedYear,
+  NULL AS team_createdAt,
+  NULL AS team_updatedAt
 `;
 
 const driverColumnMap = {
-  name: "name",
-  nationality: "nationality",
+  name: "nome",
   status: "status",
-  number: "number",
-  teamId: "team_id"
+  teamId: "equipe_id"
 };
+
+function normalizeDriverPayload(data) {
+  const statusMap = {
+    Titular: "titular",
+    Reserva: "reserva",
+    "Em avaliacao": "em avaliacao"
+  };
+
+  return {
+    ...data,
+    status: statusMap[data.status] || data.status
+  };
+}
 
 function attachTeam(row) {
   const driver = mapDriver(row);
@@ -57,26 +68,26 @@ async function listDrivers(query = {}) {
   const params = [];
 
   if (query.name) {
-    where.push("d.name LIKE ?");
+    where.push("d.nome LIKE ?");
     params.push(`%${query.name}%`);
   }
 
   if (query.status) {
     where.push("d.status = ?");
-    params.push(query.status);
+    params.push(normalizeDriverPayload({ status: query.status }).status);
   }
 
   if (query.teamId) {
-    where.push("d.team_id = ?");
+    where.push("d.equipe_id = ?");
     params.push(Number(query.teamId));
   }
 
   const sql = `
     SELECT ${driverColumns}, ${teamJoinColumns}
-    FROM drivers d
-    INNER JOIN teams t ON t.id = d.team_id
+    FROM pilotos d
+    INNER JOIN equipes t ON t.id = d.equipe_id
     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-    ORDER BY d.name ASC
+    ORDER BY d.nome ASC
   `;
 
   return (await rows(sql, params)).map((row) => attachTeam(row));
@@ -90,9 +101,9 @@ async function listDriversByTeamIds(teamIds) {
   const result = await rows(
     `
       SELECT ${driverColumns}
-      FROM drivers d
-      WHERE d.team_id IN (${inClause(teamIds)})
-      ORDER BY d.name ASC
+      FROM pilotos d
+      WHERE d.equipe_id IN (${inClause(teamIds)})
+      ORDER BY d.nome ASC
     `,
     teamIds
   );
@@ -104,8 +115,8 @@ async function findDriverById(id, connection = null) {
   const result = await rows(
     `
       SELECT ${driverColumns}, ${teamJoinColumns}
-      FROM drivers d
-      INNER JOIN teams t ON t.id = d.team_id
+      FROM pilotos d
+      INNER JOIN equipes t ON t.id = d.equipe_id
       WHERE d.id = ?
     `,
     [id],
@@ -116,24 +127,24 @@ async function findDriverById(id, connection = null) {
 }
 
 async function findDriverPlainById(id, connection = null) {
-  const result = await rows(`SELECT ${driverPlainColumns} FROM drivers WHERE id = ?`, [id], connection);
+  const result = await rows(`SELECT ${driverPlainColumns} FROM pilotos WHERE id = ?`, [id], connection);
   return mapDriver(result[0]);
 }
 
 async function createDriver(data) {
-  return insertAndFind("drivers", data, driverColumnMap, findDriverById);
+  return insertAndFind("pilotos", normalizeDriverPayload(data), driverColumnMap, findDriverById);
 }
 
 async function updateDriver(id, data) {
-  return updateAndFind("drivers", id, data, driverColumnMap, findDriverById);
+  return updateAndFind("pilotos", id, normalizeDriverPayload(data), driverColumnMap, findDriverById);
 }
 
 async function deleteDriver(id) {
-  return execute("DELETE FROM drivers WHERE id = ?", [id]);
+  return execute("DELETE FROM pilotos WHERE id = ?", [id]);
 }
 
 async function countDrivers() {
-  const result = await rows("SELECT COUNT(*) AS total FROM drivers");
+  const result = await rows("SELECT COUNT(*) AS total FROM pilotos");
   return result[0].total;
 }
 

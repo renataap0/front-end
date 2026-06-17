@@ -3,19 +3,16 @@ const { mapTeam } = require("./mappers");
 
 const teamColumns = `
   id,
-  name,
-  country,
-  principal,
-  founded_year AS foundedYear,
-  created_at AS createdAt,
-  updated_at AS updatedAt
+  nome AS name,
+  NULL AS country,
+  NULL AS principal,
+  NULL AS foundedYear,
+  NULL AS createdAt,
+  NULL AS updatedAt
 `;
 
 const teamColumnMap = {
-  name: "name",
-  country: "country",
-  principal: "principal",
-  foundedYear: "founded_year"
+  name: "nome"
 };
 
 async function listTeams(query = {}) {
@@ -34,7 +31,7 @@ async function listTeams(query = {}) {
 
   const sql = `
     SELECT ${teamColumns}
-    FROM teams
+    FROM equipes
     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
     ORDER BY name ASC
   `;
@@ -43,29 +40,29 @@ async function listTeams(query = {}) {
 }
 
 async function findTeamById(id, connection = null) {
-  const result = await rows(`SELECT ${teamColumns} FROM teams WHERE id = ?`, [id], connection);
+  const result = await rows(`SELECT ${teamColumns} FROM equipes WHERE id = ?`, [id], connection);
   return mapTeam(result[0]);
 }
 
 async function createTeam(data) {
-  return insertAndFind("teams", data, teamColumnMap, findTeamById);
+  return insertAndFind("equipes", data, teamColumnMap, findTeamById);
 }
 
 async function updateTeam(id, data) {
-  return updateAndFind("teams", id, data, teamColumnMap, findTeamById);
+  return updateAndFind("equipes", id, data, teamColumnMap, findTeamById);
 }
 
 async function deleteTeam(id) {
-  return execute("DELETE FROM teams WHERE id = ?", [id]);
+  return execute("DELETE FROM equipes WHERE id = ?", [id]);
 }
 
 async function countTeams() {
-  const result = await rows("SELECT COUNT(*) AS total FROM teams");
+  const result = await rows("SELECT COUNT(*) AS total FROM equipes");
   return result[0].total;
 }
 
 async function countUsersByTeam(id) {
-  const result = await rows("SELECT COUNT(*) AS total FROM users WHERE team_id = ?", [id]);
+  const result = await rows("SELECT COUNT(*) AS total FROM pilotos WHERE equipe_id = ?", [id]);
   return result[0].total;
 }
 

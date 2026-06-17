@@ -76,7 +76,7 @@ const storageKeys = {
   orders: "racingAngelsOrders"
 };
 
-const API_BASE_URL = window.API_BASE_URL || "http://localhost:3333/api";
+const API_BASE_URL = window.API_BASE_URL || "http://localhost:3000/api";
 const apiState = {
   lastSyncAt: null,
   syncError: null
@@ -1585,7 +1585,7 @@ function setupLoginPage() {
         window.location.href = "dashboard.html";
       }, 650);
     } catch (error) {
-      roleFeedback.textContent = error.message || "Nao foi possivel entrar. Verifique a API em localhost:3333.";
+      roleFeedback.textContent = error.message || "Nao foi possivel entrar. Verifique a API em localhost:3000.";
       loginButton.disabled = false;
     }
   });

@@ -1,4 +1,4 @@
-window.API_BASE_URL = window.API_BASE_URL || "http://localhost:3333/api";
+window.API_BASE_URL = window.API_BASE_URL || "http://localhost:3000/api";
 
 window.getToken = function() {
   return localStorage.getItem("racingAngelsToken");

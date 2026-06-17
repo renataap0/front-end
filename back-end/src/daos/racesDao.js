@@ -3,110 +3,108 @@ const { mapCar, mapDriver, mapRace, mapTeam, mapTrack } = require("./mappers");
 
 const raceColumns = `
   r.id,
-  r.name,
+  r.nome AS name,
   r.status,
-  r.laps,
-  r.best_lap_ms AS bestLapMs,
-  r.last_lap_ms AS lastLapMs,
-  r.race_date AS raceDate,
-  r.team_id AS teamId,
-  r.driver_id AS driverId,
-  r.track_id AS trackId,
-  r.car_id AS carId,
-  r.created_at AS createdAt,
-  r.updated_at AS updatedAt
+  r.voltas AS laps,
+  r.melhor_volta_ms AS bestLapMs,
+  r.ultima_volta_ms AS lastLapMs,
+  r.criado_em AS raceDate,
+  r.equipe_id AS teamId,
+  r.piloto_id AS driverId,
+  r.pista_id AS trackId,
+  r.carro_id AS carId,
+  r.criado_em AS createdAt,
+  NULL AS updatedAt
 `;
 
 const racePlainColumns = `
   id,
-  name,
+  nome AS name,
   status,
-  laps,
-  best_lap_ms AS bestLapMs,
-  last_lap_ms AS lastLapMs,
-  race_date AS raceDate,
-  team_id AS teamId,
-  driver_id AS driverId,
-  track_id AS trackId,
-  car_id AS carId,
-  created_at AS createdAt,
-  updated_at AS updatedAt
+  voltas AS laps,
+  melhor_volta_ms AS bestLapMs,
+  ultima_volta_ms AS lastLapMs,
+  criado_em AS raceDate,
+  equipe_id AS teamId,
+  piloto_id AS driverId,
+  pista_id AS trackId,
+  carro_id AS carId,
+  criado_em AS createdAt,
+  NULL AS updatedAt
 `;
 
 const raceColumnMap = {
-  name: "name",
+  name: "nome",
   status: "status",
-  laps: "laps",
-  bestLapMs: "best_lap_ms",
-  lastLapMs: "last_lap_ms",
-  raceDate: "race_date",
-  teamId: "team_id",
-  driverId: "driver_id",
-  trackId: "track_id",
-  carId: "car_id"
+  laps: "voltas",
+  bestLapMs: "melhor_volta_ms",
+  lastLapMs: "ultima_volta_ms",
+  teamId: "equipe_id",
+  driverId: "piloto_id",
+  trackId: "pista_id",
+  carId: "carro_id"
 };
 
 const teamJoinColumns = `
   t.id AS team_id,
-  t.name AS team_name,
-  t.country AS team_country,
-  t.principal AS team_principal,
-  t.founded_year AS team_foundedYear,
-  t.created_at AS team_createdAt,
-  t.updated_at AS team_updatedAt
+  t.nome AS team_name,
+  NULL AS team_country,
+  NULL AS team_principal,
+  NULL AS team_foundedYear,
+  NULL AS team_createdAt,
+  NULL AS team_updatedAt
 `;
 
 const driverJoinColumns = `
   d.id AS driver_id,
-  d.name AS driver_name,
-  d.nationality AS driver_nationality,
+  d.nome AS driver_name,
+  NULL AS driver_nationality,
   d.status AS driver_status,
-  d.number AS driver_number,
-  d.team_id AS driver_teamId,
-  d.created_at AS driver_createdAt,
-  d.updated_at AS driver_updatedAt
+  NULL AS driver_number,
+  d.equipe_id AS driver_teamId,
+  NULL AS driver_createdAt,
+  NULL AS driver_updatedAt
 `;
 
 const trackJoinColumns = `
   tr.id AS track_id,
-  tr.name AS track_name,
-  tr.country AS track_country,
-  tr.city AS track_city,
-  tr.length_km AS track_lengthKm,
-  tr.turns AS track_turns,
-  tr.sectors AS track_sectors,
-  tr.record_lap_ms AS track_recordLapMs,
-  tr.grip AS track_grip,
-  tr.elevation AS track_elevation,
-  tr.type AS track_type,
-  tr.weather AS track_weather,
-  tr.abrasion AS track_abrasion,
-  tr.created_at AS track_createdAt,
-  tr.updated_at AS track_updatedAt
+  tr.nome AS track_name,
+  tr.pais AS track_country,
+  tr.cidade AS track_city,
+  tr.tamanho_km AS track_lengthKm,
+  tr.curvas AS track_turns,
+  tr.setores AS track_sectors,
+  tr.recorde_ms AS track_recordLapMs,
+  tr.aderencia AS track_grip,
+  tr.elevacao AS track_elevation,
+  tr.tipo AS track_type,
+  tr.clima AS track_weather,
+  tr.abrasao AS track_abrasion,
+  NULL AS track_createdAt,
+  NULL AS track_updatedAt
 `;
 
 const carJoinColumns = `
   c.id AS car_id,
-  c.model AS car_model,
-  c.code AS car_code,
-  c.team_id AS car_teamId,
-  c.driver_id AS car_driverId,
-  c.power AS car_power,
-  c.aero AS car_aero,
-  c.reliability AS car_reliability,
-  c.tire_care AS car_tireCare,
+  c.modelo AS car_model,
+  c.modelo AS car_code,
+  c.equipe_id AS car_teamId,
+  c.piloto_id AS car_driverId,
+  c.potencia AS car_power,
+  c.aerodinamica AS car_aero,
+  c.confiabilidade AS car_reliability,
+  c.cuidado_pneus AS car_tireCare,
   c.ers AS car_ers,
-  c.top_speed AS car_topSpeed,
-  c.weight AS car_weight,
-  c.package_name AS car_packageName,
-  c.created_at AS car_createdAt,
-  c.updated_at AS car_updatedAt
+  c.velocidade_maxima AS car_topSpeed,
+  c.peso AS car_weight,
+  c.pacote AS car_packageName,
+  NULL AS car_createdAt,
+  NULL AS car_updatedAt
 `;
 
 function normalizeRacePayload(data) {
   return {
-    ...data,
-    raceDate: toMysqlDate(data.raceDate)
+    ...data
   };
 }
 
@@ -127,11 +125,11 @@ function attachRelations(row) {
 function baseRaceJoin(where = "", orderBy = "r.id ASC") {
   return `
     SELECT ${raceColumns}, ${teamJoinColumns}, ${driverJoinColumns}, ${trackJoinColumns}, ${carJoinColumns}
-    FROM races r
-    INNER JOIN teams t ON t.id = r.team_id
-    INNER JOIN drivers d ON d.id = r.driver_id
-    INNER JOIN tracks tr ON tr.id = r.track_id
-    INNER JOIN cars c ON c.id = r.car_id
+    FROM corridas r
+    INNER JOIN equipes t ON t.id = r.equipe_id
+    INNER JOIN pilotos d ON d.id = r.piloto_id
+    INNER JOIN pistas tr ON tr.id = r.pista_id
+    INNER JOIN carros c ON c.id = r.carro_id
     ${where}
     ORDER BY ${orderBy}
   `;
@@ -142,7 +140,7 @@ async function listRaces(query = {}) {
   const params = [];
 
   if (query.name) {
-    where.push("r.name LIKE ?");
+      where.push("r.nome LIKE ?");
     params.push(`%${query.name}%`);
   }
 
@@ -172,15 +170,15 @@ async function listRacesByField(field, values) {
 }
 
 async function listRacesByDriverIds(driverIds) {
-  return listRacesByField("driver_id", driverIds);
+  return listRacesByField("piloto_id", driverIds);
 }
 
 async function listRacesByCarIds(carIds) {
-  return listRacesByField("car_id", carIds);
+  return listRacesByField("carro_id", carIds);
 }
 
 async function listRacesByTrackIds(trackIds) {
-  return listRacesByField("track_id", trackIds);
+  return listRacesByField("pista_id", trackIds);
 }
 
 async function findRaceById(id, connection = null) {
@@ -189,24 +187,24 @@ async function findRaceById(id, connection = null) {
 }
 
 async function findRacePlainById(id, connection = null) {
-  const result = await rows(`SELECT ${racePlainColumns} FROM races WHERE id = ?`, [id], connection);
+  const result = await rows(`SELECT ${racePlainColumns} FROM corridas WHERE id = ?`, [id], connection);
   return mapRace(result[0]);
 }
 
 async function createRace(data) {
-  return insertAndFind("races", normalizeRacePayload(data), raceColumnMap, findRaceById);
+  return insertAndFind("corridas", normalizeRacePayload(data), raceColumnMap, findRaceById);
 }
 
 async function updateRace(id, data) {
-  return updateAndFind("races", id, normalizeRacePayload(data), raceColumnMap, findRaceById);
+  return updateAndFind("corridas", id, normalizeRacePayload(data), raceColumnMap, findRaceById);
 }
 
 async function deleteRace(id) {
-  return execute("DELETE FROM races WHERE id = ?", [id]);
+  return execute("DELETE FROM corridas WHERE id = ?", [id]);
 }
 
 async function countRaces() {
-  const result = await rows("SELECT COUNT(*) AS total FROM races");
+  const result = await rows("SELECT COUNT(*) AS total FROM corridas");
   return result[0].total;
 }
 
