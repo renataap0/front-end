@@ -1,15 +1,15 @@
 # Racing Angels
 
-Portal de motorsport para a equipe Racing Angels. O projeto tem um front-end em HTML, CSS e JavaScript e uma API REST em Node.js, Express, TypeScript, Prisma e MySQL.
+Portal de motorsport para a equipe Racing Angels. O projeto tem um front-end em HTML, CSS e JavaScript e uma API REST em Node.js, Express, JavaScript, MySQL e DAOs.
 
 O sistema cobre login por perfil, gestao de equipe, pilotos, carros, pistas, corridas, temporadas, loja, pedidos, dashboard e analises de performance.
 
 ## Tecnologias
 
 - Front-end: HTML, CSS e JavaScript puro
-- Back-end: Node.js, Express e TypeScript
+- Back-end: Node.js, Express e JavaScript
 - Banco de dados: MySQL
-- ORM: Prisma
+- Acesso a dados: mysql2 com camada DAO
 - Autenticacao: JWT e bcrypt
 - Validacao: Zod
 - Integracao: fetch no front-end e CORS no back-end
@@ -42,22 +42,21 @@ racing_angels/
       image (5).png
 
   back-end/
-    prisma/
-      schema.prisma
-      seed.ts
-      migrations/
+    database/
+      schema.sql
+      seed.js
     src/
-      app.ts
-      server.ts
+      app.js
+      server.js
       config/
       controllers/
+      daos/
       routes/
       services/
       middlewares/
       schemas/
       utils/
     package.json
-    tsconfig.json
 ```
 
 ## Como rodar o back-end
@@ -94,13 +93,13 @@ Crie o banco no MySQL:
 CREATE DATABASE racing_angels;
 ```
 
-Gere o Prisma Client, rode as migrations e carregue os dados iniciais:
+Crie as tabelas e carregue os dados iniciais:
 
 ```bash
-npx prisma generate
-npx prisma migrate dev --name init
-npx prisma db seed
+npm run db:setup
 ```
+
+Atencao: `npm run db:setup` recria as tabelas do banco configurado em `DATABASE_URL`.
 
 Inicie a API:
 
@@ -156,7 +155,8 @@ Regras importantes:
 - Piloto nao pode criar, editar ou excluir corridas, pilotos, pistas ou carros.
 - Ao criar corrida como equipe, o back-end usa o `teamId` do usuario logado.
 - Pedido de loja calcula subtotal, frete e total no back-end.
-- Frete gratis quando o subtotal e maior ou igual a `500`; senao o frete e `39.90`.
+- Frete gratis quando o subtotal e maior ou igual a `500`; senao o frete e `24.90`, igual ao front-end.
+- Equipe pode cadastrar, editar e excluir pistas, porque o front-end libera gerenciamento de pistas para esse perfil.
 
 ## Rotas principais
 
@@ -254,7 +254,7 @@ curl http://localhost:3333/api/races ^
 
 ## Banco de dados
 
-O modelo esta em `back-end/prisma/schema.prisma`.
+O modelo esta em `back-end/database/schema.sql`.
 
 Tabelas principais:
 
@@ -267,27 +267,25 @@ Tabelas principais:
 - `seasons`, `season_rounds`, `season_round_laps`: temporada, etapas e voltas.
 - `products`, `orders`, `order_items`: loja e pedidos.
 
-O seed esta em `back-end/prisma/seed.ts` e cria dados iniciais para demonstracao: equipes, pilotos, carros, pistas, corridas, temporada, voltas, produtos e usuarios de teste.
+O seed esta em `back-end/database/seed.js` e cria dados iniciais alinhados ao front-end: equipes, pilotos, carros, pistas, corridas, temporada, voltas, produtos e usuarios de teste.
 
 ## Fluxo do codigo
 
 1. O usuario entra pelo front-end em `front-end/index.html` ou pela pagina de login.
 2. O login chama `POST /api/auth/login`.
-3. O back-end valida usuario e senha em `authService.ts`.
+3. O back-end valida usuario e senha em `authService.js`.
 4. Se estiver correto, o back-end gera um JWT.
 5. O front-end guarda o token no `localStorage`.
 6. Nas proximas requisicoes, `front-end/assets/js/api.js` envia `Authorization: Bearer TOKEN`.
 7. `authMiddleware.ts` valida o token.
-8. As rotas chamam controllers, os controllers chamam services, e os services acessam o banco via Prisma.
+8. As rotas chamam controllers, os controllers chamam services, e os services acessam o banco por DAOs em `back-end/src/daos`.
 9. O resultado volta como JSON para o front-end.
 
 ## Arquivos de apoio criados nesta organizacao
 
-- `ARQUIVOS_PARA_EXCLUIR.md`: lista conservadora de arquivos que podem ser removidos ou revisados.
 - `ROTEIRO_APRESENTACAO.md`: roteiro para apresentar o projeto e explicar as partes do codigo.
 
 ## Pontos de atencao
 
 - O arquivo `back-end/.env` esta rastreado pelo Git. O ideal e manter apenas `back-end/.env.example` no repositorio e deixar `.env` somente local.
-- Os documentos antigos de implementacao estao duplicados e com varios caracteres quebrados. Eles podem ser removidos depois que este README for validado.
 - O front-end tem caminhos de assets e paginas que precisam ser conferidos antes de uma demonstracao visual.

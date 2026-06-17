@@ -1,167 +1,212 @@
-DOCUMENTAÇÃO DO BACKEND (STEP A STEP) — JWT + Rotas (para gerar versão em JavaScript)
+DOCUMENTACAO DO BACKEND - JavaScript + JWT + MySQL + DAOs
 
-1) Visão geral
-Backend: API REST feita com Node.js + Express + TypeScript + Prisma.
-Autenticação: JWT (JSON Web Token).
-Porta: http://localhost:3333 (padrão em env.port).
+1) Visao geral
+- Backend: Node.js + Express em JavaScript CommonJS.
+- Banco: MySQL.
+- Acesso ao banco: mysql2/promise com camada DAO em back-end/src/daos.
+- Autenticacao: JWT.
+- Porta padrao: http://localhost:3333.
+- Base da API: http://localhost:3333/api.
 
-2) Como o backend está organizado (pasta e responsabilidade)
-- src/server.ts
-  Sobe o servidor HTTP e escuta a porta definida em env.
+2) Como o backend esta organizado
+- back-end/src/server.js
+  Sobe o servidor HTTP.
 
-- src/app.ts
-  Configura middlewares globais (CORS, express.json), registra rotas e ativa autenticação com JWT.
+- back-end/src/app.js
+  Configura CORS, JSON, rotas publicas, middleware JWT global, rotas protegidas, 404 e error middleware.
 
-- src/routes/
-  Define endpoints (método HTTP + path) e aponta para controllers.
+- back-end/src/routes
+  Define metodos HTTP e paths.
 
-- src/controllers/
-  Recebe request/response, valida entrada quando aplicável e chama services.
+- back-end/src/controllers
+  Valida entrada com Zod e chama services.
 
-- src/services/
-  Regras de negócio e acesso ao banco via Prisma.
+- back-end/src/services
+  Regras de negocio, permissao operacional e composicao dos dados.
 
-- src/middlewares/
-  authMiddleware.ts: valida JWT e injeta req.user.
-  requireRole.ts: (quando usado) restringe por role.
-  errorMiddleware.ts: tratamento padrão de erros.
+- back-end/src/daos
+  SQL direto no MySQL, mapeamento snake_case/camelCase e consultas com relacionamentos.
 
-- src/config/
-  env.ts: leitura de variáveis e configuração (port, jwtSecret).
-  prisma.ts: inicialização do PrismaClient.
+- back-end/src/config
+  env.js le .env; database.js cria pool MySQL.
 
-- src/schemas/
-  Validação (ex.: Zod) para payloads (como login).
+- back-end/database/schema.sql
+  DDL das tabelas MySQL.
 
-- src/utils/
-  AppError, asyncHandler e helpers.
+- back-end/database/seed.js
+  Cria o database do DATABASE_URL, recria tabelas e popula dados iniciais alinhados ao front-end.
 
-3) Fluxo de inicialização (passo a passo)
-3.1 src/server.ts
-1. Importa { app } de ./app.
-2. Importa { env } de ./config/env.
-3. Chama app.listen(env.port, ...).
+3) Fluxo de inicializacao
+1. server.js importa app.js.
+2. app.js registra /api/auth antes do JWT.
+3. POST /api/auth/login fica publico.
+4. app.js aplica authMiddleware em /api.
+5. Todas as demais rotas /api/* exigem Authorization: Bearer TOKEN.
+6. Rotas protegidas chamam controllers, services e DAOs.
+7. errorMiddleware padroniza erros em JSON.
 
-3.2 src/app.ts
-1. app.use(cors())
-2. app.use(express.json())
-3. Rotas públicas:
-   - app.use("/api/auth", authRoutes)
-   Isso garante que o POST /api/auth/login não precisa de token.
-4. Middleware JWT global:
-   - app.use("/api", authMiddleware)
-   A partir daí, as rotas registradas depois tendem a exigir token.
-5. Rotas protegidas registradas em seguida:
-   /api/users
-   /api/teams
-   /api/drivers
-   /api/cars
-   /api/tracks
-   /api/races
-   /api/seasons
-   /api/season-rounds
-   /api/products
-   /api/orders
-   /api/analytics
-   /api/dashboard
-6. Fallback 404:
-   - qualquer rota não registrada cai em "Rota nao encontrada." (404)
-7. errorMiddleware
-   - formata respostas de erro.
+4) Variaveis de ambiente
+Arquivo: back-end/.env
 
-4) Autenticação JWT (passo a passo)
-4.1 Login (rota pública)
-Endpoint:
+DATABASE_URL="mysql://root:root@localhost:3306/racing_angels"
+JWT_SECRET="troque_essa_chave"
+PORT=3333
+
+5) Como preparar o banco
+Entre na pasta back-end:
+
+npm install
+npm run db:setup
+
+Atencao: npm run db:setup recria as tabelas do banco configurado em DATABASE_URL.
+
+6) Como iniciar a API
+Modo desenvolvimento:
+
+npm run dev
+
+Modo normal:
+
+npm start
+
+7) Login JWT
+Endpoint publico:
+
+POST /api/auth/login
+
+Body:
+
+{
+  "username": "admin",
+  "password": "123456"
+}
+
+Resposta:
+
+{
+  "token": "...",
+  "user": {
+    "id": 1,
+    "username": "admin",
+    "role": "admin",
+    "teamId": null,
+    "driverId": null
+  }
+}
+
+Usuarios do seed:
+- admin / 123456 / admin
+- equipe / 123456 / team
+- corredor / 123456 / driver
+
+8) authMiddleware
+Arquivo: back-end/src/middlewares/authMiddleware.js
+
+Passos:
+1. Le o header Authorization.
+2. Exige formato Bearer TOKEN.
+3. Valida token com JWT_SECRET.
+4. Injeta request.user com id, username, role, teamId e driverId.
+5. Se faltar token: 401 "Token JWT nao informado."
+6. Se token for invalido/expirado: 401 "Token JWT invalido ou expirado."
+
+9) Permissoes principais
+- admin: gerencia cadastros, produtos, corridas e pedidos.
+- team: cria corridas, edita corridas da propria equipe, edita pilotos da propria equipe e gerencia pistas.
+- driver: consulta dados e faz pedidos na loja.
+
+Observacoes moldadas pelo front-end:
+- Team pode criar, editar e excluir pistas porque a interface libera "canManageTracks".
+- Team nao exclui corridas porque a interface usa "canDeleteRace: false".
+- Frete da loja: gratis a partir de 500; senao 24.90, igual ao front-end.
+
+10) Rotas
+Auth:
 - POST /api/auth/login
-Arquitetura:
-- route -> controller -> service
 
-Fluxo detalhado:
-1. Controller recebe request.body.
-2. Valida com loginSchema (Zod).
-3. Service authService.login(username, password):
-   3.1 Busca usuário no banco por username.
-   3.2 Se não existir: AppError 401 "Usuario ou senha invalidos."
-   3.3 Compara senha com bcrypt.compare.
-   3.4 Se não bater: AppError 401 "Usuario ou senha invalidos."
-   3.5 Gera token JWT com:
-       - payload: username, role, teamId, driverId
-       - subject (sub): user.id
-       - expiresIn: "8h"
-4. Retorna JSON:
-   - { token, user: { id, username, role, teamId, driverId, ... } }
+Users:
+- GET /api/users
+- GET /api/users/me
 
-4.2 authMiddleware (proteção das rotas)
-Arquivo:
-- src/middlewares/authMiddleware.ts
+Teams:
+- GET /api/teams
+- POST /api/teams
+- PUT /api/teams/:id
+- DELETE /api/teams/:id
 
-Comportamento:
-1. Lê header Authorization.
-2. Exige formato: "Bearer <token>".
-   - Se não existir: 401 "Token JWT nao informado."
-3. Verifica token:
-   - jwt.verify(token, env.jwtSecret)
-4. Se inválido/expirado:
-   - 401 "Token JWT invalido ou expirado."
-5. Se válido:
-   injeta req.user com:
-   - id (Number(decoded.sub))
-   - username
-   - role
-   - teamId (decoded.teamId ?? null)
-   - driverId (decoded.driverId ?? null)
-6. next() para continuar.
+Drivers:
+- GET /api/drivers
+- GET /api/drivers/:id
+- POST /api/drivers
+- PUT /api/drivers/:id
+- DELETE /api/drivers/:id
 
-5) Rotas principais (importantes para testar no Thunder/Postman)
-Base URL:
-- http://localhost:3333
+Cars:
+- GET /api/cars
+- GET /api/cars/:id
+- POST /api/cars
+- PUT /api/cars/:id
+- DELETE /api/cars/:id
 
-5.1 Auth
-- POST http://localhost:3333/api/auth/login
-  Body (JSON):
-  {"username":"SEU_USUARIO","password":"SUA_SENHA"}
-  Sem token.
+Tracks:
+- GET /api/tracks
+- GET /api/tracks/:id
+- POST /api/tracks
+- PUT /api/tracks/:id
+- DELETE /api/tracks/:id
 
-5.2 Dashboard
-- GET http://localhost:3333/api/dashboard/summary
+Races:
+- GET /api/races
+- GET /api/races/:id
+- POST /api/races
+- PUT /api/races/:id
+- DELETE /api/races/:id
 
-5.3 Analytics
-- GET http://localhost:3333/api/analytics/
-- GET http://localhost:3333/api/analytics/drivers
-- GET http://localhost:3333/api/analytics/tracks
-- GET http://localhost:3333/api/analytics/cars
-- GET http://localhost:3333/api/analytics/rankings
+Seasons:
+- GET /api/seasons
+- POST /api/seasons
+- GET /api/seasons/:id
+- POST /api/seasons/:id/rounds
+- POST /api/season-rounds/:id/laps
+- GET /api/season-rounds/:id/laps
 
-6) Como testar cada rota no Thunder/Postman (passo a passo)
-1. Faça login:
-   - POST /api/auth/login
-   - Salve o campo token retornado.
-2. Para QUALQUER rota protegida (todas as rotas sob /api após authMiddleware):
-   - Header:
-     Authorization: Bearer SEU_TOKEN
-3. Teste os endpoints principais:
-   - GET /api/dashboard/summary
-   - GET /api/analytics/
-   - GET /api/analytics/drivers
-   - GET /api/analytics/tracks
-   - GET /api/analytics/cars
-   - GET /api/analytics/rankings
-4. Interpretação de erros comuns:
-   - 401 Token JWT nao informado / invalido:
-     Token ausente ou errado.
-   - 403 Usuario sem permissao para esta acao:
-     token existe mas role não permite.
-   - 404 Rota nao encontrada:
-     path/método incorreto.
+Products:
+- GET /api/products
+- GET /api/products/:id
+- POST /api/products
+- PUT /api/products/:id
+- DELETE /api/products/:id
 
-7) Prompt pronto para pedir a outra IA: “converter para JavaScript mantendo JWT e rotas”
-Copie e cole este texto para a IA:
+Orders:
+- GET /api/orders
+- GET /api/orders/:id
+- POST /api/orders
 
-"Converter o backend Express de TypeScript para JavaScript mantendo a mesma arquitetura (server/app/routes/controllers/services/middlewares/utils). Preservar autenticação JWT: implementar authMiddleware que exige Authorization: Bearer <token>, faz jwt.verify com jwtSecret, injeta req.user com id, username, role, teamId, driverId. Preservar rota pública POST /api/auth/login que valida body (pode substituir Zod por validação JS, mas manter o mesmo contrato), autentica com bcrypt, gera JWT com sub=user.id, payload com username/role/teamId/driverId e expira em 8h. Preservar todos os endpoints e paths conforme o app.ts e arquivos de routes/* do projeto. Manter tratamento centralizado de erros usando um AppError e errorMiddleware com respostas JSON consistentes. Produzir arquivos .js equivalentes em uma estrutura equivalente e atualizar package.json scripts se necessário (start/dev/build)."
+Analytics e Dashboard:
+- GET /api/analytics
+- GET /api/analytics/drivers
+- GET /api/analytics/tracks
+- GET /api/analytics/cars
+- GET /api/analytics/rankings
+- GET /api/dashboard/summary
 
-8) Observações importantes
-- Como /api/auth foi registrado antes do authMiddleware global, /api/auth/login é a única rota pública padrão.
-- Garanta que a porta e jwtSecret estejam configuradas via env (dotenv ou leitura equivalente).
+11) Contrato usado pelo front-end
+O front-end chama back-end/front-end/assets/js/api.js com:
+- API_BASE_URL = http://localhost:3333/api
+- Authorization: Bearer TOKEN salvo em localStorage
+
+Campos importantes mantidos para o front:
+- driver.team.name
+- driver.cars[0].code ou driver.cars[0].model
+- car.team.name
+- car.driver.name
+- car.packageName
+- track.recordLapMs
+- race.driver.name
+- race.team.name
+- race.track.name
+- race.car.model
+- product.price como number
+- order.subtotal, order.shipping e order.total como number
 
 FIM DO ARQUIVO
-

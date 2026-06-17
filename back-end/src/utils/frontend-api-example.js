@@ -1,10 +1,10 @@
-export const API_BASE_URL = "http://localhost:3333/api";
+const API_BASE_URL = "http://localhost:3333/api";
 
-export function getToken() {
+function getToken() {
   return localStorage.getItem("racingAngelsToken");
 }
 
-export async function apiFetch(path, options = {}) {
+async function apiFetch(path, options = {}) {
   const token = getToken();
   const headers = {
     "Content-Type": "application/json",
@@ -33,7 +33,7 @@ export async function apiFetch(path, options = {}) {
   return data;
 }
 
-export async function login(username, password) {
+async function login(username, password) {
   const data = await apiFetch("/auth/login", {
     method: "POST",
     body: JSON.stringify({ username, password })
@@ -45,67 +45,86 @@ export async function login(username, password) {
   return data;
 }
 
-export function getRaces(filters = {}) {
+function getRaces(filters = {}) {
   const query = new URLSearchParams(filters).toString();
   return apiFetch(`/races${query ? `?${query}` : ""}`);
 }
 
-export function createRace(payload) {
+function createRace(payload) {
   return apiFetch("/races", {
     method: "POST",
     body: JSON.stringify(payload)
   });
 }
 
-export function deleteRace(id) {
+function deleteRace(id) {
   return apiFetch(`/races/${id}`, { method: "DELETE" });
 }
 
-export function getDrivers(filters = {}) {
+function getDrivers(filters = {}) {
   const query = new URLSearchParams(filters).toString();
   return apiFetch(`/drivers${query ? `?${query}` : ""}`);
 }
 
-export function updateDriver(id, payload) {
+function updateDriver(id, payload) {
   return apiFetch(`/drivers/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload)
   });
 }
 
-export function getTracks(filters = {}) {
+function getTracks(filters = {}) {
   const query = new URLSearchParams(filters).toString();
   return apiFetch(`/tracks${query ? `?${query}` : ""}`);
 }
 
-export function createTrack(payload) {
+function createTrack(payload) {
   return apiFetch("/tracks", {
     method: "POST",
     body: JSON.stringify(payload)
   });
 }
 
-export function getCars(filters = {}) {
+function getCars(filters = {}) {
   const query = new URLSearchParams(filters).toString();
   return apiFetch(`/cars${query ? `?${query}` : ""}`);
 }
 
-export function getProducts(filters = {}) {
+function getProducts(filters = {}) {
   const query = new URLSearchParams(filters).toString();
   return apiFetch(`/products${query ? `?${query}` : ""}`);
 }
 
-export function createOrder(payload) {
+function createOrder(payload) {
   return apiFetch("/orders", {
     method: "POST",
     body: JSON.stringify(payload)
   });
 }
 
-export function getAnalytics() {
+function getAnalytics() {
   return apiFetch("/analytics");
 }
 
-export function getDashboardSummary() {
+function getDashboardSummary() {
   return apiFetch("/dashboard/summary");
 }
+
+module.exports = {
+  API_BASE_URL,
+  apiFetch,
+  createOrder,
+  createRace,
+  createTrack,
+  deleteRace,
+  getAnalytics,
+  getCars,
+  getDashboardSummary,
+  getDrivers,
+  getProducts,
+  getRaces,
+  getToken,
+  getTracks,
+  login,
+  updateDriver
+};
