@@ -88,18 +88,11 @@ CREATE TABLE carros (
 
 CREATE TABLE pistas (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(255) NOT NULL,
+    nome VARCHAR(255) NOT NULL UNIQUE,
     pais VARCHAR(100) NOT NULL,
     cidade VARCHAR(100) NOT NULL,
     tamanho_km DECIMAL(5,3) NOT NULL,
-    curvas INT NOT NULL,
-    setores INT NOT NULL,
-    recorde_ms INT NOT NULL,
-    aderencia INT NOT NULL,
-    elevacao INT NOT NULL,
-    tipo VARCHAR(50) NOT NULL,
-    clima VARCHAR(50) NOT NULL,
-    abrasao INT NOT NULL
+    tipo VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE corridas (
@@ -229,59 +222,61 @@ CREATE TABLE itens_pedido (
 INSERT INTO usuarios 
 (nome_usuario, senha_hash, perfil) 
 VALUES
-('admin', 'hash_admin_123456', 'admin'),
-('equipe', 'hash_equipe_123456', 'equipe'),
-('corredor', 'hash_corredor_123456', 'piloto');
+('admin', 'admin', 'admin'),
+('equipe', 'equipe', 'equipe'),
+('corredor', 'corredor', 'piloto');
 
 INSERT INTO equipes 
 (nome) 
 VALUES
 ('Racing Angels'),
-('Orion Apex');
+('Apex Storms'),
+('Apex Racing'),
+('Sakura Racing'),
+('Kerberus'),
+('Septem'),
+('Cowabunga'),
+('Wind Speed');
 
 INSERT INTO pilotos 
 (nome, status, equipe_id, usuario_id) 
 VALUES
-('Lia Torres', 'titular', 1, 3),
-('Nina Vale', 'titular', 1, NULL),
-('Kai Morita', 'reserva', 1, NULL),
-('Max Rocha', 'titular', 2, NULL),
-('Eva Stone', 'titular', 2, NULL),
-('Noah Vega', 'reserva', 2, NULL);
+('Raphael Galhardo', 'titular', 1, 3),
+('Renata Queiroz', 'titular', 1, NULL),
+('Rafaela Santana', 'reserva', 1, NULL),
+('Gabriela Basilio', 'reserva', 1, NULL);
 
 INSERT INTO carros 
 (modelo, piloto_id, equipe_id, potencia, aerodinamica, confiabilidade, cuidado_pneus, ers, velocidade_maxima, peso, pacote) 
 VALUES
 ('RA-07 Halo', 1, 1, 930, 88, 91, 86, 89, 335, 798, 'pacote equilibrio'),
 ('RA-11 Sprint', 2, 1, 945, 82, 88, 79, 91, 342, 795, 'pacote velocidade'),
-('RA-X Reserve', 3, 1, 910, 80, 84, 88, 83, 325, 805, 'pacote reserva'),
-('OA-01 Apex', 4, 2, 940, 85, 86, 80, 88, 340, 797, 'pacote ataque'),
-('OA-02 Vector', 5, 2, 925, 89, 90, 84, 85, 332, 799, 'pacote controle'),
-('OA-R Reserve', 6, 2, 905, 78, 82, 87, 81, 322, 808, 'pacote treino');
+('RA-21 Reserve', 3, 1, 910, 80, 84, 88, 83, 325, 805, 'pacote reserva'),
+('RA-44 Reserve', 4, 1, 905, 78, 82, 87, 81, 322, 808, 'pacote treino');
 
-INSERT INTO pistas 
-(nome, pais, cidade, tamanho_km, curvas, setores, recorde_ms, aderencia, elevacao, tipo, clima, abrasao) 
+INSERT INTO pistas
+(nome, pais, cidade, tamanho_km, tipo)
 VALUES
-('Interlagos', 'Brasil', 'Sao Paulo', 4.309, 15, 3, 70120, 86, 43, 'mista', 'instavel', 72),
-('Monaco', 'Monaco', 'Monte Carlo', 3.337, 19, 3, 72190, 78, 42, 'rua', 'seco', 65),
-('Spa Francorchamps', 'Belgica', 'Stavelot', 7.004, 20, 3, 101770, 84, 102, 'alta velocidade', 'instavel', 70),
-('Suzuka', 'Japao', 'Suzuka', 5.807, 18, 3, 88720, 88, 40, 'tecnica', 'seco', 68),
-('Silverstone', 'Reino Unido', 'Silverstone', 5.891, 18, 3, 87100, 87, 11, 'alta velocidade', 'frio', 66),
-('Monza', 'Italia', 'Monza', 5.793, 11, 3, 79290, 82, 12, 'velocidade', 'seco', 60),
-('Yas Marina', 'Emirados Arabes', 'Abu Dhabi', 5.281, 16, 3, 85050, 81, 10, 'mista', 'noite', 58),
-('Marina Bay', 'Singapura', 'Singapura', 4.940, 19, 3, 95300, 76, 5, 'rua', 'umido', 74);
+('Racing Angels', 'Brasil', 'Sao Paulo', 4.309, 'mista'),
+('Apex Storms', 'Portugal', 'Lisboa', 4.120, 'tecnica'),
+('Apex Racing', 'Japao', 'Suzuka', 5.807, 'tecnica'),
+('Sakura Racing', 'Brasil', 'Curitiba', 3.695, 'mista'),
+('Kerberus', 'Italia', 'Monza', 5.793, 'velocidade'),
+('Septem', 'Reino Unido', 'Silverstone', 5.891, 'alta velocidade'),
+('Cowabunga', 'Estados Unidos', 'Austin', 5.513, 'mista'),
+('Wind Speed', 'Emirados Arabes', 'Abu Dhabi', 5.281, 'noturna');
 
 INSERT INTO corridas 
 (nome, piloto_id, equipe_id, pista_id, carro_id, voltas, melhor_volta_ms, ultima_volta_ms, status) 
 VALUES
-('Interlagos GP', 1, 1, 1, 1, 42, 81348, 82005, 'finalizada'),
-('Monaco Night Run', 2, 1, 2, 2, 35, 72941, 73850, 'finalizada'),
-('Spa Aero Test', 1, 1, 3, 1, 28, 103210, 104020, 'treino'),
-('Suzuka Data Cup', 3, 1, 4, 3, 32, 89650, 90440, 'finalizada'),
-('Silverstone Sprint', 4, 2, 5, 4, 30, 87128, 87900, 'finalizada'),
-('Monza Speed Trial', 5, 2, 6, 5, 36, 80701, 81480, 'finalizada'),
-('Yas Marina Final', 2, 1, 7, 2, 44, 85900, 86820, 'manual'),
-('Marina Bay Challenge', 6, 2, 8, 6, 29, 96500, 97800, 'treino');
+('Racing Angels GP', 1, 1, 1, 1, 42, 81348, 82005, 'finalizada'),
+('Apex Storms GP', 2, 1, 2, 2, 35, 82941, 83850, 'finalizada'),
+('Apex Racing GP', 1, 1, 3, 1, 28, 90210, 91020, 'treino'),
+('Sakura Racing GP', 3, 1, 4, 3, 32, 89650, 90440, 'finalizada'),
+('Kerberus GP', 4, 1, 5, 4, 30, 87128, 87900, 'finalizada'),
+('Septem GP', 2, 1, 6, 2, 36, 88701, 89480, 'finalizada'),
+('Cowabunga GP', 3, 1, 7, 3, 44, 85900, 86820, 'manual'),
+('Wind Speed GP', 4, 1, 8, 4, 29, 96500, 97800, 'treino');
 
 INSERT INTO temporadas 
 (versao) 
@@ -329,9 +324,9 @@ VALUES
 (3, 4, 103980, 1),
 (3, 4, 104230, 2),
 (3, 4, 104500, 3),
-(3, 5, 104100, 1),
-(3, 5, 103890, 2),
-(3, 5, 104300, 3),
+(3, 2, 104100, 1),
+(3, 2, 103890, 2),
+(3, 2, 104300, 3),
 
 (4, 1, 90110, 1),
 (4, 1, 89980, 2),
@@ -346,16 +341,16 @@ VALUES
 (5, 4, 87128, 1),
 (5, 4, 87400, 2),
 (5, 4, 87900, 3),
-(5, 5, 87520, 1),
-(5, 5, 87680, 2),
-(5, 5, 88030, 3),
+(5, 2, 87520, 1),
+(5, 2, 87680, 2),
+(5, 2, 88030, 3),
 
 (6, 4, 81220, 1),
 (6, 4, 81050, 2),
 (6, 4, 81600, 3),
-(6, 5, 80701, 1),
-(6, 5, 81120, 2),
-(6, 5, 81480, 3);
+(6, 3, 80701, 1),
+(6, 3, 81120, 2),
+(6, 3, 81480, 3);
 
 INSERT INTO produtos 
 (nome, preco) 
@@ -457,8 +452,7 @@ SELECT
     pi.pais,
     pi.cidade,
     pi.tamanho_km,
-    pi.aderencia,
-    pi.abrasao,
+    pi.tipo,
     COUNT(c.id) AS total_corridas,
     ROUND(AVG(c.melhor_volta_ms), 0) AS media_melhor_volta_ms,
     GREATEST(
@@ -466,10 +460,8 @@ SELECT
         LEAST(
             100,
             ROUND(
-                132
-                - ((AVG(c.melhor_volta_ms) / 1000 / pi.tamanho_km) * 3)
-                + (pi.aderencia * 0.13)
-                - (pi.abrasao * 0.05)
+                100
+                - ((COALESCE(AVG(c.melhor_volta_ms), 90000) / 1000 / pi.tamanho_km) * 2)
             )
         )
     ) AS eficiencia
@@ -481,5 +473,4 @@ GROUP BY
     pi.pais,
     pi.cidade,
     pi.tamanho_km,
-    pi.aderencia,
-    pi.abrasao;
+    pi.tipo;

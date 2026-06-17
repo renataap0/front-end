@@ -1,171 +1,358 @@
 # Roteiro de apresentacao - Racing Angels
 
-Use este roteiro para apresentar o projeto explicando as partes do codigo em uma ordem logica. A ideia e mostrar primeiro o que o sistema faz, depois como o codigo esta organizado.
+Este roteiro serve para apresentar o projeto completo: front-end, back-end, banco de dados, autenticacao, loja, dashboard e integracao entre as partes.
 
 ## 1. Abertura
 
-"Este projeto se chama Racing Angels. Ele e um portal de motorsport para acompanhar equipe, pilotos, carros, pistas, corridas, loja, pedidos, dashboard e analises de performance. O sistema tem duas partes: um front-end em HTML, CSS e JavaScript, e um back-end em Node.js com TypeScript, Express, Prisma e MySQL."
+Fala sugerida:
 
-## 2. Mostrar a estrutura de pastas
+"Este projeto se chama Racing Angels. Ele e um portal de motorsport para gerenciamento e acompanhamento de uma equipe de corrida. O sistema tem telas para login, dashboard, equipe, grid, pistas, analytics, loja e contato. Por tras dessas telas existe uma API em Node.js com Express e JavaScript, integrada a um banco MySQL chamado `corridapro`."
 
-Abra a raiz do projeto e explique:
+Explique rapidamente as tres partes:
 
-- `front-end/`: paginas visuais do sistema.
-- `front-end/assets/css/style.css`: estilos da interface.
-- `front-end/assets/js/script.js`: interacoes da tela, dados locais e comportamento das paginas.
-- `front-end/assets/js/api.js`: helper para chamar a API com `fetch`.
-- `assets/shop/`: imagens dos produtos da loja.
-- `back-end/`: API e regras do sistema.
-- `back-end/prisma/`: modelo do banco, migrations e seed.
+- Front-end: HTML, CSS e JavaScript puro.
+- Back-end: Node.js, Express, JWT, bcrypt, Zod e mysql2.
+- Banco de dados: MySQL com tabelas como `usuarios`, `pilotos`, `carros`, `pistas`, `corridas`, `produtos` e `pedidos`.
+
+## 2. Estrutura do projeto
+
+Mostre a raiz do projeto:
+
+```txt
+front-end/
+back-end/
+README.md
+ROTEIRO_APRESENTACAO.md
+```
 
 Fala sugerida:
 
-"A organizacao separa o que o usuario ve, que fica no front-end, do que processa dados e conversa com o banco, que fica no back-end."
+"A estrutura foi separada entre o que o usuario ve e o que processa dados. O `front-end` tem as paginas, estilos e scripts da interface. O `back-end` tem a API, as regras de negocio e a conexao com o MySQL."
 
-## 3. Explicar o front-end
+Mostre rapidamente:
 
-Mostre `front-end/index.html` e uma pagina, por exemplo `front-end/pages/dashboard.html`.
+- `front-end/index.html`
+- `front-end/pages/`
+- `front-end/assets/css/style.css`
+- `front-end/assets/js/script.js`
+- `front-end/assets/js/api.js`
+- `back-end/src/`
+- `back-end/database/schema.sql`
+- `back-end/database/seed.js`
 
-Explique:
+## 3. Front-end
 
-- Os arquivos HTML montam as telas.
-- O CSS define identidade visual, layout e responsividade.
-- O `script.js` controla menu, login, dashboard, tabelas, carrinho e calculos exibidos na tela.
-- O `api.js` centraliza chamadas HTTP para o back-end.
+Mostre:
+
+- `front-end/index.html`
+- `front-end/pages/dashboard.html`
+- `front-end/pages/equipe.html`
+- `front-end/pages/grid.html`
+- `front-end/pages/pistas.html`
+- `front-end/pages/analytics.html`
+- `front-end/pages/loja.html`
 
 Fala sugerida:
 
-"No front-end eu uso HTML para estruturar as paginas, CSS para o visual da marca Racing Angels e JavaScript para interacao. Para nao repetir codigo de requisicao, o arquivo `api.js` guarda funcoes globais que fazem chamadas para a API e enviam o token quando o usuario esta logado."
+"O front-end foi feito com HTML, CSS e JavaScript puro. Cada arquivo HTML representa uma tela do sistema. O CSS cria a identidade visual da Racing Angels, com layout responsivo e componentes visuais. O JavaScript controla as interacoes, como login, carrinho, formularios, filtros, cards, tabelas e atualizacao das telas."
 
-## 4. Explicar login e token
+Explique os arquivos principais:
+
+- `style.css`: visual, cores, layout, responsividade e componentes.
+- `script.js`: comportamento das telas, validacoes, calculos e renderizacao.
+- `api.js`: funcoes para chamar a API usando `fetch`.
+
+## 4. Integracao do front com a API
+
+Mostre `front-end/assets/js/api.js`.
+
+Fala sugerida:
+
+"Para o front-end conversar com o back-end, foi criado o arquivo `api.js`. Ele centraliza as chamadas HTTP para `http://localhost:3000/api`. Assim, as telas nao precisam repetir codigo de `fetch` toda hora."
+
+Pontos importantes:
+
+- `window.API_BASE_URL` aponta para a API.
+- `apiFetch` envia JSON e trata erro.
+- O token JWT fica no `localStorage`.
+- Quando existe token, ele e enviado no header:
+
+```txt
+Authorization: Bearer TOKEN
+```
+
+Exemplos de funcoes:
+
+- `loginApi`
+- `getDriversApi`
+- `getTracksApi`
+- `getRacesApi`
+- `getProductsApi`
+- `createOrderApi`
+
+## 5. Login e perfis
 
 Mostre:
 
 - `front-end/pages/login.html`
+- `front-end/assets/js/script.js`
 - `front-end/assets/js/api.js`
-- `back-end/src/routes/authRoutes.ts`
-- `back-end/src/services/authService.ts`
-- `back-end/src/middlewares/authMiddleware.ts`
+- `back-end/src/routes/authRoutes.js`
+- `back-end/src/services/authService.js`
+- `back-end/src/middlewares/authMiddleware.js`
 
 Fala sugerida:
 
-"Quando o usuario faz login, o front-end envia usuario e senha para `POST /api/auth/login`. O back-end procura o usuario no banco, compara a senha com bcrypt e, se estiver correta, gera um token JWT. Esse token e salvo no `localStorage` e enviado nas proximas chamadas."
+"O login envia usuario e senha para `POST /api/auth/login`. O back-end busca o usuario no MySQL, valida a senha com bcrypt e retorna um token JWT. Esse token prova que o usuario esta autenticado."
 
-## 5. Explicar a entrada da API
+Usuarios de teste:
 
-Mostre `back-end/src/app.ts`.
+| Usuario | Senha | Perfil |
+| --- | --- | --- |
+| admin | 123456 | admin |
+| equipe | 123456 | team |
+| corredor | 123456 | driver |
 
-Explique:
+Explique os perfis:
 
-- O Express e configurado com CORS e JSON.
-- A rota de auth fica publica.
-- Depois de `/api`, o `authMiddleware` protege as rotas.
-- Cada modulo tem seu arquivo de rotas.
-- No fim, existe tratamento para rota nao encontrada e erros.
+- `admin`: controle completo.
+- `team`: gerencia dados operacionais da equipe.
+- `driver`: consulta dados e pode fazer pedidos.
 
-Fala sugerida:
+## 6. Back-end
 
-"O `app.ts` e o mapa principal da API. Ele registra todas as rotas e coloca a autenticacao antes das rotas protegidas. Assim, quase tudo dentro de `/api` precisa de token."
-
-## 6. Explicar controllers, services e schemas
-
-Mostre um fluxo simples, por exemplo corrida:
-
-- `back-end/src/routes/racesRoutes.ts`
-- `back-end/src/controllers/racesController.ts`
-- `back-end/src/services/racesService.ts`
-- `back-end/src/schemas/domainSchemas.ts`
+Mostre `back-end/src/app.js` e `back-end/src/server.js`.
 
 Fala sugerida:
 
-"As rotas recebem o endpoint. Os controllers recebem a requisicao, validam os dados com Zod e chamam os services. Os services concentram as regras de negocio e fazem as consultas no banco com Prisma."
+"O back-end foi feito em JavaScript com Node.js e Express. O `server.js` inicia a API. O `app.js` configura CORS, JSON, rota de login, middleware de autenticacao, rotas protegidas e tratamento de erros."
 
-Exemplo de regra:
+Fluxo principal:
 
-"Em `racesService.ts`, o sistema garante que piloto e carro pertencam a equipe da corrida. Tambem impede que uma equipe edite corrida de outra equipe."
+1. `server.js` inicia a API.
+2. `app.js` registra as rotas.
+3. `/api/auth/login` fica publica.
+4. As demais rotas passam pelo `authMiddleware`.
+5. Controllers chamam services.
+6. Services chamam DAOs.
+7. DAOs executam SQL no MySQL.
 
-## 7. Explicar permissoes
+## 7. Rotas, controllers, services e DAOs
+
+Mostre um exemplo completo, como pilotos:
+
+- `back-end/src/routes/driversRoutes.js`
+- `back-end/src/controllers/driversController.js`
+- `back-end/src/services/driversService.js`
+- `back-end/src/daos/driversDao.js`
+
+Fala sugerida:
+
+"A API foi organizada em camadas para o codigo ficar mais facil de manter. A rota define o endpoint. O controller recebe a requisicao. O service aplica a regra de negocio. O DAO acessa o banco de dados."
+
+Explique DAO em linguagem simples:
+
+"DAO significa Data Access Object. Aqui ele e o arquivo responsavel por executar SQL no banco. Por exemplo, `driversDao.js` consulta a tabela `pilotos` e transforma o resultado para o formato que o front-end espera."
+
+Exemplo do fluxo:
+
+```txt
+GET /api/drivers
+routes -> controller -> service -> dao -> MySQL
+```
+
+## 8. Banco de dados MySQL
 
 Mostre:
 
-- `back-end/src/middlewares/requireRole.ts`
-- algum arquivo de rotas, como `racesRoutes.ts` ou `productsRoutes.ts`
+- `back-end/database/schema.sql`
+- `back-end/database/seed.js`
+- `back-end/.env`
 
 Fala sugerida:
 
-"As permissoes sao feitas por perfil. O admin tem controle total. A equipe pode criar e editar algumas informacoes. O piloto tem acesso mais limitado. O middleware `requireRole` verifica se o perfil do usuario pode executar aquela acao."
+"O banco usado e MySQL. O schema cria o banco `corridapro` e as tabelas principais. O seed popula dados iniciais para a apresentacao, como usuarios, equipes, pilotos, carros, pistas, corridas, produtos e pedidos."
 
-## 8. Explicar banco de dados e Prisma
+Tabelas principais:
+
+- `usuarios`: login, senha e perfil.
+- `equipes`: equipes de corrida.
+- `pilotos`: pilotos vinculados a equipes.
+- `carros`: carros vinculados a pilotos e equipes.
+- `pistas`: pistas de corrida.
+- `corridas`: historico de corridas.
+- `temporadas`, `etapas_temporada`, `voltas_etapa`: calendario e voltas.
+- `produtos`, `pedidos`, `itens_pedido`: loja.
+
+Explique o `.env`:
+
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=root
+DB_NAME=corridapro
+PORT=3000
+JWT_SECRET=root
+```
+
+Fala sugerida:
+
+"Essas variaveis deixam as credenciais fora do codigo. Se o banco mudar de host, usuario ou senha, eu altero somente o `.env`."
+
+## 9. Dashboard e analytics
 
 Mostre:
 
-- `back-end/prisma/schema.prisma`
-- `back-end/prisma/seed.ts`
-
-Explique os principais modelos:
-
-- `User`: login e perfil.
-- `Team`: equipe.
-- `Driver`: piloto.
-- `Car`: carro.
-- `Track`: pista.
-- `Race`: corrida.
-- `Season`, `SeasonRound`, `SeasonRoundLap`: temporada e voltas.
-- `Product`, `Order`, `OrderItem`: loja e pedidos.
+- `front-end/pages/dashboard.html`
+- `front-end/pages/analytics.html`
+- `back-end/src/services/dashboardService.js`
+- `back-end/src/services/analyticsService.js`
 
 Fala sugerida:
 
-"O Prisma faz a ponte entre TypeScript e MySQL. No `schema.prisma` eu defino tabelas, campos e relacionamentos. O `seed.ts` cria dados iniciais para demonstrar o sistema, como usuarios, equipes, pilotos, carros, pistas, corridas e produtos."
+"O dashboard mostra um resumo geral do sistema. O analytics transforma dados de corridas em indicadores, como melhores pilotos, melhores carros, eficiencia das pistas, melhor volta e consistencia."
 
-## 9. Explicar loja e pedidos
+Explique que os calculos usam dados reais vindos das tabelas:
+
+- `corridas`
+- `pilotos`
+- `carros`
+- `pistas`
+- `voltas_etapa`
+
+## 10. Tela de equipe, grid e pistas
+
+Mostre:
+
+- `front-end/pages/equipe.html`
+- `front-end/pages/grid.html`
+- `front-end/pages/pistas.html`
+- `back-end/src/services/driversService.js`
+- `back-end/src/services/racesService.js`
+- `back-end/src/services/tracksService.js`
+
+Fala sugerida:
+
+"A tela de equipe mostra pilotos e carros. O grid acompanha corridas e tempos. A tela de pistas permite listar, cadastrar, editar e excluir pistas dependendo do perfil do usuario."
+
+Regras importantes:
+
+- Admin tem controle completo.
+- Equipe pode criar corridas e gerenciar pistas.
+- Piloto tem permissao mais limitada.
+- Ao criar corrida como equipe, a API respeita o time do usuario logado.
+
+## 11. Loja e pedidos
 
 Mostre:
 
 - `front-end/pages/loja.html`
-- `back-end/src/services/ordersService.ts`
-- `back-end/prisma/schema.prisma`, nos models `Product`, `Order` e `OrderItem`
+- `front-end/assets/js/script.js`, parte do carrinho
+- `back-end/src/services/ordersService.js`
+- `back-end/src/daos/ordersDao.js`
+- tabelas `produtos`, `pedidos`, `itens_pedido`
 
 Fala sugerida:
 
-"A loja permite selecionar produtos e finalizar pedido. No back-end, o pedido nao confia no preco vindo do front-end. Ele busca o preco real do produto no banco, calcula subtotal, frete e total, e baixa o estoque dentro de uma transacao."
+"A loja permite adicionar produtos ao carrinho e finalizar pedido. O front-end monta a experiencia do carrinho, mas o back-end recalcula valores usando os produtos do banco. Isso evita confiar apenas no valor vindo da tela."
 
-## 10. Explicar analytics e dashboard
+Explique:
+
+- Produtos vêm de `GET /api/products`.
+- Pedido e criado em `POST /api/orders`.
+- Frete e calculado no back-end.
+- Pedido fica vinculado ao usuario autenticado.
+
+## 12. Seguranca e tratamento de erros
 
 Mostre:
 
-- `back-end/src/services/analyticsService.ts`
-- `back-end/src/services/dashboardService.ts`
-- `front-end/pages/analytics.html`
-- `front-end/pages/dashboard.html`
+- `back-end/src/middlewares/authMiddleware.js`
+- `back-end/src/middlewares/requireRole.js`
+- `back-end/src/middlewares/errorMiddleware.js`
+- `back-end/src/utils/AppError.js`
 
 Fala sugerida:
 
-"A parte de analytics transforma dados de corridas em indicadores. Ela calcula ranking de pilotos, eficiencia de pistas, pontuacao de carros, melhor volta, consistencia e resumo geral para o dashboard."
+"A API usa JWT para autenticar usuarios. O middleware `authMiddleware` verifica se o token existe e e valido. O `requireRole` controla permissoes por perfil. O `errorMiddleware` padroniza respostas de erro para o front-end."
 
-## 11. Citar arquivos que podem sair
+Exemplos de erro:
+
+- Token ausente: `401`.
+- Sem permissao: `403`.
+- Registro nao encontrado: `404`.
+- Erro interno: `500`.
+
+## 13. Como rodar para demonstracao
+
+Explique os comandos:
+
+Back-end:
+
+```bash
+cd back-end
+npm install
+npm run db:setup
+npm run dev
+```
+
+Front-end:
+
+```bash
+npm install
+npm run dev
+```
+
+URLs:
+
+- API: `http://localhost:3000`
+- Health check: `http://localhost:3000/health`
+- Front-end: `http://localhost:8080/front-end/index.html`
+
+Observacao:
+
+"Para as rotas com banco funcionarem, o MySQL precisa estar ligado em `localhost:3306` com as credenciais configuradas no `.env`."
+
+## 14. Ordem sugerida de demonstracao
+
+1. Abrir o site no navegador.
+2. Mostrar a pagina inicial.
+3. Fazer login com `admin / 123456`.
+4. Mostrar dashboard.
+5. Mostrar equipe e pilotos.
+6. Mostrar grid/corridas.
+7. Mostrar pistas.
+8. Mostrar analytics.
+9. Mostrar loja e carrinho.
+10. Mostrar `api.js` explicando a integracao.
+11. Mostrar `app.js` explicando a API.
+12. Mostrar uma rota, controller, service e DAO.
+13. Mostrar `schema.sql` e explicar o banco.
+
+## 15. Fechamento
 
 Fala sugerida:
 
-"Durante a revisao, eu tambem identifiquei arquivos antigos de documentacao e duplicacoes. Eles estao listados em `ARQUIVOS_PARA_EXCLUIR.md`. Eu nao apaguei automaticamente porque alguns podem servir como historico, mas para entrega final o projeto pode ficar mais limpo mantendo README, roteiro e codigo principal."
+"Resumindo, o Racing Angels e um sistema completo dividido em front-end, back-end e banco de dados. O front-end entrega a experiencia visual. O back-end centraliza autenticacao, regras e seguranca. O MySQL guarda os dados. A organizacao em rotas, controllers, services e DAOs deixa o codigo mais facil de explicar, testar e evoluir."
 
-## 12. Fechamento
-
-Fala sugerida:
-
-"Resumindo, o Racing Angels e um sistema completo dividido em front-end, API e banco. O front-end apresenta a experiencia do usuario, a API concentra autenticacao e regras, e o Prisma organiza a persistencia no MySQL. A arquitetura facilita manutencao porque cada parte tem uma responsabilidade clara."
-
-## Ordem rapida para demonstrar arquivos
+## Arquivos principais para abrir durante a apresentacao
 
 1. `README.md`
 2. `front-end/index.html`
-3. `front-end/assets/js/api.js`
-4. `back-end/src/app.ts`
-5. `back-end/src/routes/racesRoutes.ts`
-6. `back-end/src/controllers/racesController.ts`
-7. `back-end/src/services/racesService.ts`
-8. `back-end/src/middlewares/authMiddleware.ts`
-9. `back-end/src/middlewares/requireRole.ts`
-10. `back-end/prisma/schema.prisma`
-11. `back-end/prisma/seed.ts`
-12. `back-end/src/services/analyticsService.ts`
-13. `ARQUIVOS_PARA_EXCLUIR.md`
+3. `front-end/assets/css/style.css`
+4. `front-end/assets/js/script.js`
+5. `front-end/assets/js/api.js`
+6. `back-end/src/app.js`
+7. `back-end/src/server.js`
+8. `back-end/src/routes/authRoutes.js`
+9. `back-end/src/controllers/authController.js`
+10. `back-end/src/services/authService.js`
+11. `back-end/src/middlewares/authMiddleware.js`
+12. `back-end/src/routes/driversRoutes.js`
+13. `back-end/src/controllers/driversController.js`
+14. `back-end/src/services/driversService.js`
+15. `back-end/src/daos/driversDao.js`
+16. `back-end/database/schema.sql`
+17. `back-end/database/seed.js`
+18. `back-end/.env`

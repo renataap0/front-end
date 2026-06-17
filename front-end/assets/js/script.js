@@ -92,7 +92,7 @@ const roleCredentials = {
 const defaultRaces = [
   {
     id: 1,
-    race: "Interlagos GP",
+    race: "Racing Angels GP",
     driver: "Raphael Galhardo",
     team: currentTeam,
     laps: 42,
@@ -102,29 +102,29 @@ const defaultRaces = [
   },
   {
     id: 2,
-    race: "Monaco Night Run",
+    race: "Apex Storms GP",
     driver: "Renata Queiroz",
-    team: "Sakura Racing",
+    team: currentTeam,
     laps: 39,
-    bestLap: "1:12.908",
-    lastLap: "1:13.210",
+    bestLap: "1:22.941",
+    lastLap: "1:23.850",
     status: "Finalizada"
   },
   {
     id: 3,
-    race: "Spa Aero Test",
+    race: "Apex Racing GP",
     driver: "Rafaela Santana",
-    team: "Apex Storms",
+    team: currentTeam,
     laps: 31,
-    bestLap: "1:44.210",
-    lastLap: "1:45.010",
+    bestLap: "1:30.210",
+    lastLap: "1:31.020",
     status: "Treino"
   },
   {
     id: 4,
-    race: "Suzuka Data Cup",
-    driver: "Luca Guidoni",
-    team: "Apex Racing",
+    race: "Sakura Racing GP",
+    driver: "Gabriela Basilio",
+    team: currentTeam,
     laps: 36,
     bestLap: "1:29.771",
     lastLap: "1:30.402",
@@ -147,84 +147,134 @@ const defaultDrivers = [
     name: "Rafaela Santana",
     car: "RA-21",
     status: "Reserva"
+  },
+  {
+    name: "Gabriela Basilio",
+    car: "RA-44",
+    status: "Reserva"
   }
 ];
 
 const defaultTracks = [
   {
     id: 1,
-    name: "Interlagos",
+    name: "Racing Angels",
     country: "Brasil",
     city: "Sao Paulo",
     lengthKm: 4.309,
-    turns: 15,
+    turns: 0,
     sectors: 3,
-    record: "1:10.540",
-    grip: 86,
-    elevation: 43,
+    record: "1:30.000",
+    grip: 80,
+    elevation: 0,
     type: "Misto",
-    weather: "Instavel",
-    abrasion: 72
+    weather: "Variavel",
+    abrasion: 50
   },
   {
     id: 2,
-    name: "Monaco",
-    country: "Monaco",
-    city: "Monte Carlo",
-    lengthKm: 3.337,
-    turns: 19,
+    name: "Apex Storms",
+    country: "Portugal",
+    city: "Lisboa",
+    lengthKm: 4.12,
+    turns: 0,
     sectors: 3,
-    record: "1:12.908",
-    grip: 78,
-    elevation: 42,
-    type: "Rua",
-    weather: "Seco",
-    abrasion: 48
+    record: "1:30.000",
+    grip: 80,
+    elevation: 0,
+    type: "Tecnico",
+    weather: "Variavel",
+    abrasion: 50
   },
   {
     id: 3,
-    name: "Spa",
-    country: "Belgica",
-    city: "Stavelot",
-    lengthKm: 7.004,
-    turns: 19,
-    sectors: 3,
-    record: "1:44.210",
-    grip: 83,
-    elevation: 102,
-    type: "Alta velocidade",
-    weather: "Instavel",
-    abrasion: 67
-  },
-  {
-    id: 4,
-    name: "Suzuka",
+    name: "Apex Racing",
     country: "Japao",
     city: "Suzuka",
     lengthKm: 5.807,
-    turns: 18,
+    turns: 0,
     sectors: 3,
-    record: "1:29.771",
-    grip: 84,
-    elevation: 40,
+    record: "1:30.000",
+    grip: 80,
+    elevation: 0,
     type: "Tecnico",
-    weather: "Umido",
-    abrasion: 62
+    weather: "Variavel",
+    abrasion: 50
+  },
+  {
+    id: 4,
+    name: "Sakura Racing",
+    country: "Brasil",
+    city: "Curitiba",
+    lengthKm: 3.695,
+    turns: 0,
+    sectors: 3,
+    record: "1:30.000",
+    grip: 80,
+    elevation: 0,
+    type: "Misto",
+    weather: "Variavel",
+    abrasion: 50
   },
   {
     id: 5,
-    name: "Silverstone",
-    country: "Reino Unido",
-    city: "Towcester",
-    lengthKm: 5.891,
-    turns: 18,
+    name: "Kerberus",
+    country: "Italia",
+    city: "Monza",
+    lengthKm: 5.793,
+    turns: 0,
     sectors: 3,
-    record: "1:27.097",
-    grip: 88,
-    elevation: 11,
-    type: "Rapido",
-    weather: "Frio",
-    abrasion: 58
+    record: "1:30.000",
+    grip: 80,
+    elevation: 0,
+    type: "Velocidade",
+    weather: "Variavel",
+    abrasion: 50
+  },
+  {
+    id: 6,
+    name: "Septem",
+    country: "Reino Unido",
+    city: "Silverstone",
+    lengthKm: 5.891,
+    turns: 0,
+    sectors: 3,
+    record: "1:30.000",
+    grip: 80,
+    elevation: 0,
+    type: "Alta velocidade",
+    weather: "Variavel",
+    abrasion: 50
+  },
+  {
+    id: 7,
+    name: "Cowabunga",
+    country: "Estados Unidos",
+    city: "Austin",
+    lengthKm: 5.513,
+    turns: 0,
+    sectors: 3,
+    record: "1:30.000",
+    grip: 80,
+    elevation: 0,
+    type: "Misto",
+    weather: "Variavel",
+    abrasion: 50
+  },
+  {
+    id: 8,
+    name: "Wind Speed",
+    country: "Emirados Arabes",
+    city: "Abu Dhabi",
+    lengthKm: 5.281,
+    turns: 0,
+    sectors: 3,
+    record: "1:30.000",
+    grip: 80,
+    elevation: 0,
+    type: "Noturno",
+    weather: "Variavel",
+    abrasion: 50
   }
 ];
 
@@ -247,7 +297,7 @@ const defaultCars = [
     id: 2,
     model: "RA-11 Sprint",
     driver: "Renata Queiroz",
-    team: "Sakura Racing",
+    team: currentTeam,
     power: 1006,
     aero: 88,
     reliability: 91,
@@ -259,9 +309,9 @@ const defaultCars = [
   },
   {
     id: 3,
-    model: "RA-X Reserve",
+    model: "RA-21 Reserve",
     driver: "Rafaela Santana",
-    team: "Apex Storms",
+    team: currentTeam,
     power: 998,
     aero: 86,
     reliability: 96,
@@ -273,9 +323,9 @@ const defaultCars = [
   },
   {
     id: 4,
-    model: "OA-01 Apex",
-    driver: "Luca Guidoni",
-    team: "Apex Racing",
+    model: "RA-44 Reserve",
+    driver: "Gabriela Basilio",
+    team: currentTeam,
     power: 1002,
     aero: 87,
     reliability: 89,
@@ -791,14 +841,7 @@ function buildTrackApiPayload(track) {
     country: track.country,
     city: track.city,
     lengthKm: Number(track.lengthKm),
-    turns: Number(track.turns),
-    sectors: Number(track.sectors),
-    recordLapMs: Math.round(parseLapTime(track.record)),
-    grip: Number(track.grip),
-    elevation: Number(track.elevation),
-    type: track.type,
-    weather: track.weather,
-    abrasion: Number(track.abrasion)
+    type: track.type
   };
 }
 
@@ -2678,8 +2721,8 @@ function renderTrackSummary(trackStats) {
     strategyList.innerHTML = [
       bestTrack ? `Prioridade de volta rapida: ${bestTrack.name}, eficiencia ${bestTrack.efficiency}/100.` : "Cadastre pistas para calcular prioridade.",
       longestTrack ? `Maior demanda de ERS: ${longestTrack.name}, ${longestTrack.lengthKm} km por volta.` : "Sem pista longa cadastrada.",
-      "Use grip e abrasividade para comparar desgaste de pneus antes da corrida.",
-      "Vincule o nome da pista ao nome da corrida para alimentar os rankings automaticamente."
+      "Use o tipo da pista para separar circuitos mistos, tecnicos e de velocidade.",
+      "As oito pistas usam os nomes das equipes cadastradas."
     ].map((item) => `<li>${escapeHTML(item)}</li>`).join("");
   }
 }
@@ -2710,21 +2753,19 @@ function renderTrackList() {
         <circle cx="${34 + index * 14 % 108}" cy="${34 + index * 9 % 48}" r="4"></circle>
       </svg>
       <h3>${escapeHTML(track.name)}</h3>
-      <p>${escapeHTML(track.city)} / ${escapeHTML(track.country)} - ${escapeHTML(track.weather)}</p>
+      <p>${escapeHTML(track.city)} / ${escapeHTML(track.country)}</p>
       <div class="track-stat-grid">
         <span><b>${track.lengthKm}</b> km</span>
-        <span><b>${track.turns}</b> curvas</span>
-        <span><b>${track.sectors}</b> setores</span>
-        <span><b>${track.grip}</b> grip</span>
-        <span><b>${track.abrasion}</b> abrasao</span>
-        <span><b>${track.elevation}</b> m elev.</span>
+        <span><b>${escapeHTML(track.type)}</b> tipo</span>
+        <span><b>${escapeHTML(track.country)}</b> pais</span>
+        <span><b>${escapeHTML(track.city)}</b> cidade</span>
       </div>
       <div class="track-efficiency">
         <span>Indice de eficiencia</span>
         <strong>${track.efficiency}/100</strong>
       </div>
       <div class="chart-bar-track"><i style="width: ${clampNumber(track.efficiency, 8, 100)}%"></i></div>
-      <p class="monitor-note">Recorde ${escapeHTML(track.record)} | melhor base ${escapeHTML(track.bestLap)} | ${track.races} corridas vinculadas.</p>
+      <p class="monitor-note">Melhor base ${escapeHTML(track.bestLap)} | ${track.races} corridas vinculadas.</p>
     </article>
   `).join("");
 }
@@ -2763,23 +2804,14 @@ function setupTracksPage() {
       const countryInput = trackForm.elements.country;
       const cityInput = trackForm.elements.city;
       const lengthInput = trackForm.elements.lengthKm;
-      const turnsInput = trackForm.elements.turns;
-      const sectorsInput = trackForm.elements.sectors;
-      const recordInput = trackForm.elements.record;
-      const gripInput = trackForm.elements.grip;
-      const elevationInput = trackForm.elements.elevation;
       const typeInput = trackForm.elements.type;
-      const weatherInput = trackForm.elements.weather;
-      const abrasionInput = trackForm.elements.abrasion;
 
       nameInput.value = titleCaseWords(sanitizeTitle(nameInput.value).trim());
       countryInput.value = titleCaseWords(sanitizeName(countryInput.value).trim());
       cityInput.value = titleCaseWords(sanitizeName(cityInput.value).trim());
       typeInput.value = titleCaseWords(sanitizeTitle(typeInput.value).trim());
-      weatherInput.value = titleCaseWords(sanitizeTitle(weatherInput.value).trim());
-      recordInput.value = formatLapDigits(recordInput.value);
 
-      const requiredFields = [nameInput, countryInput, cityInput, lengthInput, turnsInput, sectorsInput, recordInput];
+      const requiredFields = [nameInput, countryInput, cityInput, lengthInput];
       const emptyField = requiredFields.find((field) => !field.value);
 
       if (emptyField) {
@@ -2798,28 +2830,20 @@ function setupTracksPage() {
         return;
       }
 
-      if (!isCompleteLapTime(recordInput.value)) {
-        recordInput.focus();
-        if (trackFormMessage) {
-          trackFormMessage.textContent = "Recorde precisa seguir M:SS.mmm. Digite 121348 para 1:21.348.";
-        }
-        return;
-      }
-
       const newTrack = {
         id: Date.now(),
         name: nameInput.value,
         country: countryInput.value,
         city: cityInput.value,
         lengthKm: Number(lengthInput.value),
-        turns: Number(getDigits(turnsInput.value)),
-        sectors: Number(getDigits(sectorsInput.value)),
-        record: recordInput.value,
-        grip: clampNumber(getDigits(gripInput.value), 0, 100),
-        elevation: Number(getDigits(elevationInput.value)),
+        turns: 0,
+        sectors: 3,
+        record: "1:30.000",
+        grip: 80,
+        elevation: 0,
         type: typeInput.value || "Misto",
-        weather: weatherInput.value || "Variavel",
-        abrasion: clampNumber(getDigits(abrasionInput.value), 0, 100)
+        weather: "Variavel",
+        abrasion: 50
       };
       const tracks = getTracks();
       const existingTrackIndex = tracks.findIndex((track) => normalizeKey(track.name) === normalizeKey(newTrack.name));

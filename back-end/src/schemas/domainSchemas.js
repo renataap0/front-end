@@ -46,14 +46,14 @@ const trackCreateSchema = z.object({
   country: text,
   city: text,
   lengthKm: z.coerce.number().positive(),
-  turns: positiveInt,
-  sectors: positiveInt,
-  recordLapMs: positiveInt,
-  grip: percent,
-  elevation: nonNegativeInt,
-  type: text,
-  weather: text,
-  abrasion: percent
+  type: text.default("Mista"),
+  turns: positiveInt.optional(),
+  sectors: positiveInt.optional(),
+  recordLapMs: positiveInt.optional(),
+  grip: percent.optional(),
+  elevation: nonNegativeInt.optional(),
+  weather: optionalText,
+  abrasion: percent.optional()
 });
 
 const raceCreateSchema = z.object({

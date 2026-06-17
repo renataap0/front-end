@@ -7,14 +7,14 @@ const trackColumns = `
   pais AS country,
   cidade AS city,
   tamanho_km AS lengthKm,
-  curvas AS turns,
-  setores AS sectors,
-  recorde_ms AS recordLapMs,
-  aderencia AS grip,
-  elevacao AS elevation,
+  0 AS turns,
+  3 AS sectors,
+  90000 AS recordLapMs,
+  80 AS grip,
+  0 AS elevation,
   tipo AS type,
-  clima AS weather,
-  abrasao AS abrasion,
+  'Variavel' AS weather,
+  50 AS abrasion,
   NULL AS createdAt,
   NULL AS updatedAt
 `;
@@ -24,14 +24,7 @@ const trackColumnMap = {
   country: "pais",
   city: "cidade",
   lengthKm: "tamanho_km",
-  turns: "curvas",
-  sectors: "setores",
-  recordLapMs: "recorde_ms",
-  grip: "aderencia",
-  elevation: "elevacao",
-  type: "tipo",
-  weather: "clima",
-  abrasion: "abrasao"
+  type: "tipo"
 };
 
 async function listTracks(query = {}) {
