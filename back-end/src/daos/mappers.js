@@ -100,6 +100,7 @@ function mapRace(row, prefix = "") {
     id: row[`${prefix}id`],
     name: row[`${prefix}name`],
     status: row[`${prefix}status`],
+    durationMs: row[`${prefix}durationMs`],
     laps: row[`${prefix}laps`],
     bestLapMs: row[`${prefix}bestLapMs`],
     lastLapMs: row[`${prefix}lastLapMs`],

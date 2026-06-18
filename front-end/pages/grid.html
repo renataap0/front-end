@@ -49,11 +49,11 @@
     <main>
       <section class="page-hero apple-reveal">
         <div>
-          <p class="eyebrow">Grid de largada</p>
-          <h1>Ranking por melhor volta</h1>
+          <p class="eyebrow">Classificacao geral</p>
+          <h1>Ranking por duração</h1>
           <p>
-            A classificacao consolida as corridas registradas no painel e ordena os pilotos
-            pela melhor volta, destacando ritmo, consistencia e volume de pista.
+            A classificacao reune os pilotos de todas as equipes. A menor duracao registrada
+            define a posicao, enquanto pilotos sem resultado aguardam classificacao.
           </p>
         </div>
         <a class="btn btn-primary" href="dashboard.html">Adicionar corrida</a>
@@ -87,20 +87,12 @@
                 <strong id="monitorRace">--</strong>
               </article>
               <article>
-                <span>Melhor volta</span>
-                <strong id="monitorBestLap">--</strong>
-              </article>
-              <article>
-                <span>Ultima volta</span>
-                <strong id="monitorLastLap">--</strong>
-              </article>
-              <article>
                 <span>Status</span>
                 <strong id="monitorStatus">--</strong>
               </article>
               <article>
-                <span>Voltas</span>
-                <strong id="monitorLaps">--</strong>
+                <span>Tempo total</span>
+                <strong id="monitorDuration">--</strong>
               </article>
             </div>
 
@@ -128,9 +120,9 @@
         <div class="panel-title-row">
           <div>
             <p class="dashboard-kicker">Classificacao</p>
-            <h2>Corredores por melhor volta</h2>
+            <h2>Corredores por menor duração</h2>
           </div>
-          <span class="access-chip" id="raceCountChip">0 corridas</span>
+          <span class="access-chip" id="raceCountChip">0 pilotos</span>
         </div>
 
         <div class="table-wrap">
@@ -141,9 +133,7 @@
                 <th>Corredor</th>
                 <th>Equipe</th>
                 <th>Corrida</th>
-                <th>Melhor volta</th>
-                <th>Ultima volta</th>
-                <th>Voltas</th>
+                <th>Tempo total</th>
                 <th>Acoes</th>
               </tr>
             </thead>

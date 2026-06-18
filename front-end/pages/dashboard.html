@@ -171,7 +171,7 @@
                   <option value="Racing Angels" selected>Racing Angels</option>
                   <option value="Sakura Racing">Sakura Racing</option>
                   <option value="Apex Storms">Apex Storms</option>
-                  <option value="Apex Racing">Apex Racing</option>
+                  <option value="Lightning">Lightning</option>
                   <option value="Kerberus">Kerberus</option>
                   <option value="Wind Speed">Wind Speed</option>
                   <option value="Cowabunga">Cowabunga</option>
@@ -263,41 +263,26 @@
             </label>
             <label>
               <span>Corredor</span>
-              <input type="text" name="driverName" value="Raphael Galhardo" maxlength="32" autocomplete="off" data-mask="name" required>
+              <select name="driverId" id="raceDriverSelect" required>
+                <option value="">Carregando pilotos...</option>
+              </select>
             </label>
             <label>
               <span>Equipe</span>
-              <select name="teamName" required>
-                <option value="Racing Angels" selected>Racing Angels</option>
-                <option value="Sakura Racing">Sakura Racing</option>
-                <option value="Apex Storms">Apex Storms</option>
-                <option value="Apex Racing">Apex Racing</option>
-                <option value="Kerberus">Kerberus</option>
-                <option value="Wind Speed">Wind Speed</option>
-                <option value="Cowabunga">Cowabunga</option>
-                <option value="Septem">Septem</option>
-              </select>
+              <input type="text" name="teamName" value="" readonly required>
             </label>
             <label>
-              <span>Voltas</span>
-              <input type="text" name="laps" value="42" inputmode="numeric" maxlength="3" autocomplete="off" data-mask="integer" required>
+              <span>Segundos</span>
+              <input type="text" name="durationSeconds" value="5400" inputmode="numeric" maxlength="7" autocomplete="off" placeholder="Ex.: 5415" data-mask="integer" required>
             </label>
             <label>
-              <span>Melhor volta</span>
-              <input type="text" name="bestLap" value="1:21.348" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="1:21.348" data-mask="lap" required>
+              <span>Milissegundos</span>
+              <input type="text" name="durationMilliseconds" value="000" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="Ex.: 327" data-mask="integer" required>
             </label>
             <label>
-              <span>Ultima volta</span>
-              <input type="text" name="lastLap" value="1:22.005" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="1:22.005" data-mask="lap" required>
+              <span>Volta</span>
+              <input type="text" name="lapNumber" value="1" inputmode="numeric" maxlength="3" autocomplete="off" data-mask="integer" required>
             </label>
-            <label>
-              <span>Modo: registrar todas as voltas</span>
-              <select name="allLapsMode" data-mask="title">
-                <option value="projected" selected>Projetar ritmo completo (melhor/ultima)</option>
-                <option value="single">Registrar somente resumo</option>
-              </select>
-            </label>
-
             <button class="btn btn-primary" type="submit">Adicionar corrida</button>
           </form>
           <p class="form-message" id="raceFormMessage"></p>

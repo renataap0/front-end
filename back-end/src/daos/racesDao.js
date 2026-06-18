@@ -5,6 +5,7 @@ const raceColumns = `
   r.id,
   r.nome AS name,
   r.status,
+  r.duracao_ms AS durationMs,
   r.voltas AS laps,
   r.melhor_volta_ms AS bestLapMs,
   r.ultima_volta_ms AS lastLapMs,
@@ -21,6 +22,7 @@ const racePlainColumns = `
   id,
   nome AS name,
   status,
+  duracao_ms AS durationMs,
   voltas AS laps,
   melhor_volta_ms AS bestLapMs,
   ultima_volta_ms AS lastLapMs,
@@ -36,6 +38,7 @@ const racePlainColumns = `
 const raceColumnMap = {
   name: "nome",
   status: "status",
+  durationMs: "duracao_ms",
   laps: "voltas",
   bestLapMs: "melhor_volta_ms",
   lastLapMs: "ultima_volta_ms",
@@ -131,7 +134,7 @@ function baseRaceJoin(where = "", orderBy = "r.id ASC") {
     INNER JOIN equipes t ON t.id = r.equipe_id
     INNER JOIN pilotos d ON d.id = r.piloto_id
     INNER JOIN pistas tr ON tr.id = r.pista_id
-    INNER JOIN carros c ON c.id = r.carro_id
+    LEFT JOIN carros c ON c.id = r.carro_id
     ${where}
     ORDER BY ${orderBy}
   `;

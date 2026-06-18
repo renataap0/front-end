@@ -30,19 +30,29 @@ async function assertRaceEntities(data, user) {
 
   const [driver, car] = await Promise.all([
     driversDao.findDriverPlainById(data.driverId),
-    carsDao.findCarPlainById(data.carId)
+    data.carId ? carsDao.findCarPlainById(data.carId) : Promise.resolve(null)
   ]);
 
-  if (!driver || !car) {
-    throw new AppError("Piloto ou carro nao encontrado.", 404);
+  if (!driver) {
+    throw new AppError("Piloto nao encontrado.", 404);
   }
 
-  if (driver.teamId !== teamId || car.teamId !== teamId) {
-    throw new AppError("Piloto e carro devem pertencer a equipe da corrida.", 400);
+  if (driver.teamId !== teamId) {
+    throw new AppError("Piloto deve pertencer a equipe da corrida.", 400);
   }
 
-  if (car.driverId && car.driverId !== driver.id) {
-    throw new AppError("O carro selecionado pertence a outro piloto.", 400);
+  if (data.carId) {
+    if (!car) {
+      throw new AppError("Carro nao encontrado.", 404);
+    }
+
+    if (car.teamId !== teamId) {
+      throw new AppError("Carro deve pertencer a equipe da corrida.", 400);
+    }
+
+    if (car.driverId && car.driverId !== driver.id) {
+      throw new AppError("O carro selecionado pertence a outro piloto.", 400);
+    }
   }
 
   return teamId;
@@ -68,7 +78,13 @@ async function createRace(data, user) {
   }
 
   const teamId = await assertRaceEntities(data, user);
-  return racesDao.createRace({ ...data, teamId });
+  return racesDao.createRace({
+    ...data,
+    teamId,
+    laps: data.laps || 1,
+    bestLapMs: data.bestLapMs || data.durationMs,
+    lastLapMs: data.lastLapMs || data.durationMs
+  });
 }
 
 async function updateRace(id, data, user) {

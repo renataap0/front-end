@@ -123,10 +123,11 @@ CREATE TABLE pistas (
 CREATE TABLE corridas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
+    duracao_ms INT UNSIGNED NOT NULL DEFAULT 5400000,
     piloto_id INT NOT NULL,
     equipe_id INT NOT NULL,
     pista_id INT NOT NULL,
-    carro_id INT NOT NULL,
+    carro_id INT NULL,
     voltas INT NOT NULL,
     melhor_volta_ms INT NOT NULL,
     ultima_volta_ms INT NOT NULL,
@@ -296,7 +297,7 @@ INSERT INTO equipes
 VALUES
 ('Racing Angels', 'Brasil', 'Renata Queiroz', 2018),
 ('Apex Storms', 'Portugal', NULL, 2019),
-('Apex Racing', 'Japao', NULL, 2017),
+('Lightning', 'Japao', NULL, 2017),
 ('Sakura Racing', 'Brasil', NULL, 2020),
 ('Kerberus', 'Italia', NULL, 2016),
 ('Septem', 'Reino Unido', NULL, 2015),
@@ -450,6 +451,7 @@ SELECT
     e.nome AS equipe,
     pi.nome AS pista,
     ca.modelo AS carro,
+    c.duracao_ms,
     c.voltas,
     c.melhor_volta_ms,
     c.ultima_volta_ms,
@@ -459,7 +461,7 @@ FROM corridas c
 INNER JOIN pilotos p ON c.piloto_id = p.id
 INNER JOIN equipes e ON c.equipe_id = e.id
 INNER JOIN pistas pi ON c.pista_id = pi.id
-INNER JOIN carros ca ON c.carro_id = ca.id;
+LEFT JOIN carros ca ON c.carro_id = ca.id;
 
 CREATE VIEW vw_score_carros AS
 SELECT

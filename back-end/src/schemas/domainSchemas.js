@@ -67,14 +67,15 @@ const trackCreateSchema = z.object({
 const raceCreateSchema = z.object({
   name: text,
   status: z.string().trim().default("Agendada"),
-  laps: positiveInt,
-  bestLapMs: positiveInt,
-  lastLapMs: positiveInt,
+  durationMs: positiveInt.default(5400000),
+  laps: positiveInt.default(1),
+  bestLapMs: positiveInt.optional(),
+  lastLapMs: positiveInt.optional(),
   raceDate: z.coerce.date().optional().nullable(),
   teamId: positiveInt.optional(),
   driverId: positiveInt,
   trackId: positiveInt,
-  carId: positiveInt
+  carId: positiveInt.optional().nullable()
 });
 
 const seasonCreateSchema = z.object({

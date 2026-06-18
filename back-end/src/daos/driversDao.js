@@ -1,4 +1,5 @@
 const { execute, inClause, insertAndFind, rows, updateAndFind } = require("./helpers");
+const { transaction } = require("../config/database");
 const { mapDriver, mapTeam } = require("./mappers");
 
 const driverColumns = `
@@ -142,7 +143,29 @@ async function updateDriver(id, data) {
 }
 
 async function deleteDriver(id) {
-  return execute("DELETE FROM pilotos WHERE id = ?", [id]);
+  return transaction(async (connection) => {
+    const lapResult = await execute(
+      "DELETE FROM voltas_etapa WHERE piloto_id = ?",
+      [id],
+      connection
+    );
+    const raceResult = await execute(
+      "DELETE FROM corridas WHERE piloto_id = ?",
+      [id],
+      connection
+    );
+    const driverResult = await execute(
+      "DELETE FROM pilotos WHERE id = ?",
+      [id],
+      connection
+    );
+
+    return {
+      deletedDrivers: driverResult.affectedRows,
+      deletedRaces: raceResult.affectedRows,
+      deletedLaps: lapResult.affectedRows
+    };
+  });
 }
 
 async function countDrivers() {

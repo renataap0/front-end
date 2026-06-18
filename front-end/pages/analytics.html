@@ -152,10 +152,10 @@
       <section class="races-table-card texture-panel apple-reveal">
         <div class="panel-title-row">
           <div>
-            <p class="dashboard-kicker">Voltas</p>
-            <h2>Melhores voltas registradas</h2>
+            <p class="dashboard-kicker">Voltas por EC</p>
+            <h2>EC (Voltas 1..8) e oito voltas</h2>
           </div>
-          <span class="access-chip">Gap automatico</span>
+          <span class="access-chip">Blocos por pista</span>
         </div>
         <div class="table-wrap">
           <table class="races-table">
@@ -163,14 +163,43 @@
               <tr>
                 <th>#</th>
                 <th>Piloto</th>
-                <th>Corrida</th>
                 <th>Pista</th>
-                <th>Melhor</th>
-                <th>Ultima</th>
-                <th>Gap</th>
+                <th>EC</th>
+                <th>V1</th>
+                <th>V2</th>
+                <th>V3</th>
+                <th>V4</th>
+                <th>V5</th>
+                <th>V6</th>
+                <th>V7</th>
+                <th>V8</th>
               </tr>
             </thead>
-            <tbody id="bestLapBody"></tbody>
+            <tbody id="ecLapsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="races-table-card texture-panel apple-reveal">
+        <div class="panel-title-row">
+          <div>
+            <p class="dashboard-kicker">Classificacao geral</p>
+            <h2>Ranking por media de todas as voltas</h2>
+          </div>
+          <span class="access-chip">Media global</span>
+        </div>
+        <div class="table-wrap">
+          <table class="races-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Piloto</th>
+                <th>Pontos</th>
+                <th>Media geral</th>
+                <th>Total de voltas</th>
+              </tr>
+            </thead>
+            <tbody id="globalLapAverageRankingBody"></tbody>
           </table>
         </div>
       </section>

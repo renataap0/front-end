@@ -274,6 +274,7 @@ async function main() {
         body: {
           name: "Integration GP",
           status: "treino",
+          durationMs: 4530123,
           laps: 12,
           bestLapMs: 80000,
           lastLapMs: 80500,
@@ -286,6 +287,7 @@ async function main() {
       });
       assert.equal(response.status, 201);
       assert.equal(response.data.raceDate, "2030-05-20T12:00:00.000Z");
+      assert.equal(response.data.durationMs, 4530123);
       state.raceId = response.data.id;
     });
 

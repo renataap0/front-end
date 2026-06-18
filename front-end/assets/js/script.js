@@ -571,6 +571,7 @@ function normalizeApiRace(race) {
     race: race.name || race.race || "Corrida",
     driver: race.driver?.name || race.driverName || "Piloto",
     team: race.team?.name || race.teamName || currentTeam,
+    durationMs: Number(race.durationMs) || 5400000,
     laps: Number(race.laps) || 0,
     bestLap: lapMsToText(race.bestLapMs ?? race.bestLap),
     lastLap: lapMsToText(race.lastLapMs ?? race.lastLap),
@@ -739,28 +740,33 @@ function buildRaceApiPayload(race) {
   const drivers = getDrivers();
   const tracks = getTracks();
   const cars = getCars();
-  const driver = findByNormalizedName(drivers, race.driver);
+  const driver = drivers.find((item) => Number(item.id) === Number(race.driverId))
+    || findByNormalizedName(drivers, race.driver);
   const track = findByNormalizedName(tracks, race.track || inferTrackName(race.race, tracks))
     || findByNormalizedName(tracks, race.team)
     || tracks[0];
   const driverKey = normalizeKey(race.driver);
   const car = cars.find((item) => Number(item.driverId) === Number(driver?.id))
-    || cars.find((item) => normalizeKey(item.driver) === driverKey)
-    || cars[0];
+    || cars.find((item) => (
+      !item.driverId
+      && Number(item.teamId) === Number(driver?.teamId)
+    ))
+    || cars.find((item) => (
+      normalizeKey(item.driver) === driverKey
+      && Number(item.teamId) === Number(driver?.teamId)
+    ));
 
-  if (!driver?.id || !track?.id || !car?.id) {
+  if (!driver?.id || !track?.id) {
     return null;
   }
 
   const payload = {
     name: race.race,
     status: race.status || "Manual",
-    laps: Number(race.laps) || 1,
-    bestLapMs: Math.round(parseLapTime(race.bestLap)),
-    lastLapMs: Math.round(parseLapTime(race.lastLap)),
+    durationMs: Number(race.durationMs) || 5400000,
     driverId: Number(driver.id),
     trackId: Number(track.id),
-    carId: Number(car.id)
+    carId: car?.id ? Number(car.id) : null
   };
 
   if (driver.teamId) {
@@ -778,7 +784,7 @@ async function persistRaceToApi(race) {
   const payload = buildRaceApiPayload(race);
 
   if (!payload) {
-    throw new Error("Nao encontrei piloto, pista ou carro com ID do banco para gravar a corrida.");
+    throw new Error("Nao encontrei o piloto ou a pista no banco para gravar a corrida.");
   }
 
   const persistedRace = normalizeApiRace(await window.createRaceApi(payload));
@@ -1086,6 +1092,19 @@ function formatMilliseconds(milliseconds) {
   return `${minutes}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
 }
 
+function formatRaceDurationMs(value) {
+  const totalMs = Number(value);
+
+  if (!Number.isFinite(totalMs) || totalMs <= 0) {
+    return "--";
+  }
+
+  const seconds = Math.floor(totalMs / 1000);
+  const milliseconds = Math.floor(totalMs % 1000);
+
+  return `${seconds} s ${String(milliseconds).padStart(3, "0")} ms`;
+}
+
 function average(values) {
   const validValues = values.filter((value) => Number.isFinite(value));
 
@@ -1206,7 +1225,8 @@ function setupRaceInputMasks(manualRaceForm) {
       }
 
       if (mask === "integer") {
-        field.value = getDigits(field.value).slice(0, 3);
+        const maxLength = field.maxLength > 0 ? field.maxLength : 3;
+        field.value = getDigits(field.value).slice(0, maxLength);
       }
 
       if (mask === "decimal") {
@@ -1256,15 +1276,62 @@ function getRankedRaces() {
 }
 
 function getGridRaces() {
-  const rankedRaces = getRankedRaces();
+  const drivers = getDrivers();
+  const races = getRaces();
 
-  if (rankedRaces.length) {
-    return rankedRaces;
-  }
+  return drivers
+    .map((driver) => {
+      const driverRaces = races
+        .filter((race) => {
+          if (race.driverId && driver.id) {
+            return Number(race.driverId) === Number(driver.id);
+          }
 
-  return [...defaultRaces].sort((first, second) => {
-    return parseLapTime(first.bestLap) - parseLapTime(second.bestLap);
-  });
+          return normalizeKey(race.driver) === normalizeKey(driver.name);
+        })
+        .filter((race) => Number(race.durationMs) > 0)
+        .sort((first, second) => Number(first.durationMs) - Number(second.durationMs));
+      const bestRace = driverRaces[0];
+
+      if (bestRace) {
+        return {
+          ...bestRace,
+          driver: driver.name,
+          driverId: driver.id,
+          number: driver.number,
+          team: driver.team || bestRace.team,
+          durationMs: Number(bestRace.durationMs) || 5400000,
+          driverStatus: driver.status,
+          isQualified: true
+        };
+      }
+
+      return {
+        id: null,
+        driverId: driver.id,
+        driver: driver.name,
+        number: driver.number,
+        team: driver.team || "Equipe nao informada",
+        race: "Aguardando resultado",
+        durationMs: null,
+        bestLap: "--",
+        lastLap: "--",
+        laps: 0,
+        status: "Sem tempo",
+        driverStatus: driver.status,
+        isQualified: false
+      };
+    })
+    .sort((first, second) => {
+      const firstDuration = first.isQualified ? Number(first.durationMs) : Number.POSITIVE_INFINITY;
+      const secondDuration = second.isQualified ? Number(second.durationMs) : Number.POSITIVE_INFINITY;
+
+      if (firstDuration !== secondDuration) {
+        return firstDuration - secondDuration;
+      }
+
+      return first.driver.localeCompare(second.driver, "pt-BR");
+    });
 }
 
 function getAnalysisRaces() {
@@ -1520,7 +1587,8 @@ function addTrackCar(trackCar) {
 }
 
 function createTelemetry(race, index) {
-  const seed = parseLapTime(race.bestLap) / 1000 + index * 17;
+  const parsedLap = parseLapTime(race.bestLap);
+  const seed = (Number.isFinite(parsedLap) ? parsedLap / 1000 : 80) + index * 17;
   const wave = Math.sin(Date.now() / 650 + seed);
   const speed = Math.round(255 + index * 7 + wave * 18);
   const fuel = Math.max(18, Math.min(96, 78 - index * 5 + wave * 5));
@@ -1755,8 +1823,7 @@ function updateDashboardPermissions() {
 
   if (role.canAddRace && teamInput) {
     teamInput.disabled = false;
-    teamInput.readOnly = getCurrentRole() === "team";
-    teamInput.value = getCurrentRole() === "team" ? currentTeam : teamInput.value;
+    teamInput.readOnly = true;
   }
 
   if (raceFormMessage) {
@@ -1921,7 +1988,9 @@ function setupDriverEditor() {
     const driverId = Number(button.dataset.deleteDriver);
     const driverName = button.dataset.driverName || "este piloto";
 
-    if (!driverId || !window.confirm(`Remover ${driverName}? Esta acao nao pode ser desfeita.`)) {
+    if (!driverId || !window.confirm(
+      `Remover ${driverName}? As corridas e voltas vinculadas a este piloto tambem serao removidas. Esta acao nao pode ser desfeita.`
+    )) {
       return;
     }
 
@@ -1947,9 +2016,7 @@ function setupDriverEditor() {
       button.disabled = false;
 
       if (driverSaveMessage) {
-        driverSaveMessage.textContent = error.status === 409
-          ? `${driverName} possui corridas ou voltas vinculadas e nao pode ser removido.`
-          : `Nao foi possivel remover ${driverName}: ${error.message}`;
+        driverSaveMessage.textContent = `Nao foi possivel remover ${driverName}: ${error.message}`;
       }
     }
   });
@@ -2062,6 +2129,31 @@ function setupManualRaceForm() {
   }
 
   setupRaceInputMasks(manualRaceForm);
+  const driverSelect = manualRaceForm.elements.driverId;
+  const teamNameInput = manualRaceForm.elements.teamName;
+  const currentUser = readJSON(storageKeys.user, {});
+  const availableDrivers = getDrivers().filter((driver) => {
+    return getCurrentRole() !== "team" || Number(driver.teamId) === Number(currentUser.teamId);
+  });
+
+  if (driverSelect) {
+    driverSelect.innerHTML = availableDrivers.length
+      ? availableDrivers.map((driver) => (
+        `<option value="${Number(driver.id)}">${escapeHTML(driver.name)} - ${escapeHTML(driver.team || "Sem equipe")}</option>`
+      )).join("")
+      : '<option value="">Nenhum piloto disponivel</option>';
+  }
+
+  function updateSelectedDriverTeam() {
+    const selectedDriver = availableDrivers.find((driver) => Number(driver.id) === Number(driverSelect?.value));
+
+    if (teamNameInput) {
+      teamNameInput.value = selectedDriver?.team || "";
+    }
+  }
+
+  driverSelect?.addEventListener("change", updateSelectedDriverTeam);
+  updateSelectedDriverTeam();
 
   manualRaceForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -2074,20 +2166,17 @@ function setupManualRaceForm() {
     }
 
     const raceNameInput = manualRaceForm.elements.raceName;
-    const driverNameInput = manualRaceForm.elements.driverName;
-    const teamNameInput = manualRaceForm.elements.teamName;
-    const lapsInput = manualRaceForm.elements.laps;
-    const bestLapInput = manualRaceForm.elements.bestLap;
-    const lastLapInput = manualRaceForm.elements.lastLap;
+    const raceDriverInput = manualRaceForm.elements.driverId;
+    const durationSecondsInput = manualRaceForm.elements.durationSeconds;
+    const durationMillisecondsInput = manualRaceForm.elements.durationMilliseconds;
+    const lapNumberInput = manualRaceForm.elements.lapNumber;
+
 
     raceNameInput.value = titleCaseWords(sanitizeTitle(raceNameInput.value).trim());
-    driverNameInput.value = titleCaseWords(sanitizeName(driverNameInput.value).trim());
-    teamNameInput.value = titleCaseWords(sanitizeName(teamNameInput.value).trim());
-    lapsInput.value = getDigits(lapsInput.value).slice(0, 3);
-    bestLapInput.value = formatLapDigits(bestLapInput.value);
-    lastLapInput.value = formatLapDigits(lastLapInput.value);
+    durationSecondsInput.value = getDigits(durationSecondsInput.value).slice(0, 7);
+    durationMillisecondsInput.value = getDigits(durationMillisecondsInput.value).slice(0, 3);
 
-    const requiredTextFields = [raceNameInput, driverNameInput, teamNameInput];
+    const requiredTextFields = [raceNameInput, teamNameInput];
     const emptyField = requiredTextFields.find((field) => !field.value);
 
     if (emptyField) {
@@ -2098,50 +2187,56 @@ function setupManualRaceForm() {
       return;
     }
 
-    if (!Number(lapsInput.value) || Number(lapsInput.value) < 1) {
-      lapsInput.focus();
+    if (!Number(raceDriverInput.value)) {
+      raceDriverInput.focus();
       if (raceFormMessage) {
-        raceFormMessage.textContent = "Informe a quantidade de voltas usando apenas numeros.";
+        raceFormMessage.textContent = "Selecione um piloto cadastrado.";
       }
       return;
     }
 
-    if (!isCompleteLapTime(bestLapInput.value)) {
-      bestLapInput.focus();
+    const durationSeconds = Number(durationSecondsInput.value);
+    const durationMilliseconds = Number(durationMillisecondsInput.value);
+    const durationMs = durationSeconds * 1000 + durationMilliseconds;
+
+    if (!durationSeconds) {
+      durationSecondsInput.focus();
       if (raceFormMessage) {
-        raceFormMessage.textContent = "Melhor volta precisa seguir o formato M:SS.mmm. Digite 121348 para 1:21.348.";
+        raceFormMessage.textContent = "Informe o tempo total em segundos.";
       }
       return;
     }
 
-    if (!isCompleteLapTime(lastLapInput.value)) {
-      lastLapInput.focus();
+    if (!Number.isInteger(durationMilliseconds) || durationMilliseconds < 0 || durationMilliseconds > 999) {
+      durationMillisecondsInput.focus();
       if (raceFormMessage) {
-        raceFormMessage.textContent = "Ultima volta precisa seguir o formato M:SS.mmm. Digite 122005 para 1:22.005.";
+        raceFormMessage.textContent = "Milissegundos devem estar entre 000 e 999.";
       }
       return;
     }
 
     const formData = new FormData(manualRaceForm);
     const raceName = formData.get("raceName").trim();
-    const driverName = formData.get("driverName").trim();
-    const teamName = getCurrentRole() === "team" ? currentTeam : formData.get("teamName").trim();
+    const selectedDriver = availableDrivers.find((driver) => Number(driver.id) === Number(formData.get("driverId")));
 
-    const lapsCount = Number(formData.get("laps"));
-    const bestLapRaw = formData.get("bestLap").trim();
-    const lastLapRaw = formData.get("lastLap").trim();
+    if (!selectedDriver) {
+      raceFormMessage.textContent = "O piloto selecionado nao esta mais disponivel. Atualize a pagina.";
+      return;
+    }
 
-    const allLapsMode = formData.get("allLapsMode") || "projected";
+    const driverName = selectedDriver.name;
+    const teamName = selectedDriver.team;
+
     const submitButton = manualRaceForm.querySelector('button[type="submit"]');
 
     const newRace = {
       id: Date.now(),
       race: raceName,
+      driverId: selectedDriver.id,
       driver: driverName,
+      teamId: selectedDriver.teamId,
       team: teamName,
-      laps: lapsCount,
-      bestLap: bestLapRaw,
-      lastLap: lastLapRaw,
+      durationMs,
       track: inferTrackName(raceName),
       car: getRaceCarModel({ driver: driverName }),
       status: "Manual"
@@ -2159,16 +2254,6 @@ function setupManualRaceForm() {
       }
 
       persistedRace = await persistRaceToApi(newRace);
-      let savedLaps = [];
-
-      if (allLapsMode === "projected") {
-        if (raceFormMessage) {
-          raceFormMessage.textContent = "Corrida salva. Registrando todas as voltas no banco...";
-        }
-
-        savedLaps = await persistProjectedLapsToApi(persistedRace);
-        upsertSeasonRoundFromManualRace(persistedRace);
-      }
 
       updateDashboardMetrics();
       renderTrackCars();
@@ -2177,8 +2262,7 @@ function setupManualRaceForm() {
       renderAnalyticsPage();
 
       if (raceFormMessage) {
-        const lapMessage = savedLaps.length ? ` ${savedLaps.length} voltas registradas.` : "";
-        raceFormMessage.textContent = `Corrida salva automaticamente no banco.${lapMessage}`;
+        raceFormMessage.textContent = "Corrida salva automaticamente no banco.";
       }
     } catch (error) {
       updateDashboardMetrics();
@@ -2186,9 +2270,7 @@ function setupManualRaceForm() {
       renderAnalyticsPage();
 
       if (raceFormMessage) {
-        raceFormMessage.textContent = persistedRace
-          ? `A corrida foi salva, mas as voltas nao foram concluidas: ${error.message}`
-          : `Nao foi possivel salvar a corrida: ${error.message}`;
+        raceFormMessage.textContent = `Nao foi possivel salvar a corrida: ${error.message}`;
       }
     } finally {
       if (submitButton) {
@@ -2524,20 +2606,28 @@ function renderGridPage() {
   const rankedRaces = getGridRaces();
   const role = getRoleConfig();
 
+  if (activeGridIndex >= rankedRaces.length) {
+    activeGridIndex = 0;
+  }
+
   if (raceCountChip) {
-    raceCountChip.textContent = formatRaceCount(rankedRaces.length);
+    raceCountChip.textContent = `${rankedRaces.length} ${rankedRaces.length === 1 ? "piloto" : "pilotos"}`;
   }
 
   if (gridCards) {
-    gridCards.innerHTML = rankedRaces.map((race, index) => `
-      <button class="grid-slot ${index === activeGridIndex ? "is-active" : ""}" type="button" data-grid-index="${index}">
-        <span class="grid-position">P${index + 1}</span>
-        <div>
-          <strong>${escapeHTML(race.driver)} #${escapeHTML(getCarNumber(race.driver, index))}</strong>
-          <span>${escapeHTML(race.bestLap)} - ${escapeHTML(race.race)}</span>
-        </div>
-      </button>
-    `).join("");
+    gridCards.innerHTML = rankedRaces.length
+      ? rankedRaces.map((race, index) => `
+        <button class="grid-slot ${index === activeGridIndex ? "is-active" : ""}" type="button" data-grid-index="${index}">
+          <span class="grid-position">${race.isQualified ? `P${index + 1}` : "--"}</span>
+          <div>
+            <strong>${escapeHTML(race.driver)} #${escapeHTML(race.number || getCarNumber(race.driver, index))}</strong>
+            <span>${race.isQualified
+              ? `${escapeHTML(formatRaceDurationMs(race.durationMs))} - ${escapeHTML(race.race)}`
+              : `${escapeHTML(race.team)} - Sem tempo`}</span>
+          </div>
+        </button>
+      `).join("")
+      : '<p class="empty-state">Nenhum piloto cadastrado.</p>';
   }
 
   if (!racesTableBody) {
@@ -2547,26 +2637,24 @@ function renderGridPage() {
   if (!rankedRaces.length) {
     racesTableBody.innerHTML = `
       <tr>
-        <td colspan="8">Nenhuma corrida registrada.</td>
+        <td colspan="6">Nenhum piloto cadastrado.</td>
       </tr>
     `;
     return;
   }
 
   racesTableBody.innerHTML = rankedRaces.map((race, index) => {
-    const actionButton = role.canDeleteRace
+    const actionButton = race.isQualified && role.canDeleteRace
       ? `<button class="table-action danger" type="button" data-delete-race="${race.id}">Excluir</button>`
-      : `<button class="table-action" type="button" disabled>Protegido</button>`;
+      : `<button class="table-action" type="button" disabled>${race.isQualified ? "Protegido" : "Sem corrida"}</button>`;
 
     return `
       <tr>
-        <td><span class="position-badge">P${index + 1}</span></td>
+        <td><span class="position-badge">${race.isQualified ? `P${index + 1}` : "--"}</span></td>
         <td>${escapeHTML(race.driver)}</td>
         <td>${escapeHTML(race.team)}</td>
         <td>${escapeHTML(race.race)}</td>
-        <td>${escapeHTML(race.bestLap)}</td>
-        <td>${escapeHTML(race.lastLap || "-")}</td>
-        <td>${escapeHTML(race.laps)}</td>
+        <td>${escapeHTML(formatRaceDurationMs(race.durationMs))}</td>
         <td>${actionButton}</td>
       </tr>
     `;
@@ -2637,10 +2725,8 @@ function updateCarMonitor() {
   const monitorSpeed = document.getElementById("monitorSpeed");
   const monitorTeam = document.getElementById("monitorTeam");
   const monitorRace = document.getElementById("monitorRace");
-  const monitorBestLap = document.getElementById("monitorBestLap");
-  const monitorLastLap = document.getElementById("monitorLastLap");
   const monitorStatus = document.getElementById("monitorStatus");
-  const monitorLaps = document.getElementById("monitorLaps");
+  const monitorDuration = document.getElementById("monitorDuration");
   const monitorNote = document.getElementById("monitorNote");
   const fuelBar = document.getElementById("fuelBar");
   const tireBar = document.getElementById("tireBar");
@@ -2650,19 +2736,19 @@ function updateCarMonitor() {
     return;
   }
 
-  monitorDriver.textContent = `${race.driver} #${telemetry.carNumber}`;
-  monitorPosition.textContent = `P${activeGridIndex + 1}`;
-  monitorSpeed.textContent = telemetry.speed;
+  monitorDriver.textContent = `${race.driver} #${race.number || telemetry.carNumber}`;
+  monitorPosition.textContent = race.isQualified ? `P${activeGridIndex + 1}` : "P--";
+  monitorSpeed.textContent = race.isQualified ? telemetry.speed : "0";
   monitorTeam.textContent = race.team;
   monitorRace.textContent = race.race;
-  monitorBestLap.textContent = race.bestLap;
-  monitorLastLap.textContent = race.lastLap || "-";
   monitorStatus.textContent = race.status || "Monitorado";
-  monitorLaps.textContent = race.laps;
-  monitorNote.textContent = `Monitorando ${race.driver} com telemetria de referencia. Clique em outro carro para trocar.`;
-  fuelBar.style.width = `${telemetry.fuel}%`;
-  tireBar.style.width = `${telemetry.tire}%`;
-  ersBar.style.width = `${telemetry.ers}%`;
+  monitorDuration.textContent = formatRaceDurationMs(race.durationMs);
+  monitorNote.textContent = race.isQualified
+    ? `Monitorando ${race.driver} com telemetria de referencia. Clique em outro carro para trocar.`
+    : `${race.driver} ainda nao possui corrida registrada para entrar na classificacao.`;
+  fuelBar.style.width = race.isQualified ? `${telemetry.fuel}%` : "0%";
+  tireBar.style.width = race.isQualified ? `${telemetry.tire}%` : "0%";
+  ersBar.style.width = race.isQualified ? `${telemetry.ers}%` : "0%";
 }
 
 function setupGridPage() {
@@ -2899,11 +2985,22 @@ function renderInsightCards(driverStats, trackStats, carStats, rankedRaces) {
 
 function renderAnalyticsTables(driverStats, trackStats, carStats, rankedRaces) {
   const driverRankingBody = document.getElementById("driverRankingBody");
-  const bestLapBody = document.getElementById("bestLapBody");
   const trackRankingBody = document.getElementById("trackRankingBody");
   const carRankingBody = document.getElementById("carRankingBody");
+  const ecLapsBody = document.getElementById("ecLapsBody");
+  const globalLapAverageRankingBody = document.getElementById("globalLapAverageRankingBody");
+
+  if (ecLapsBody || globalLapAverageRankingBody) {
+    // EC: separar voltas em blocos de 8 (Volta 1..8 => EC 1, Volta 9..16 => EC 2, ...)
+    // Ranking: calcular a media de todas as voltas do piloto e ordenar (menor tempo = melhor)
+    setupECLapsTables({ ecLapsBody, globalLapAverageRankingBody });
+  }
+
+
 
   if (driverRankingBody) {
+
+
     driverRankingBody.innerHTML = driverStats.length
       ? driverStats.map((driver, index) => `
         <tr>
@@ -3000,6 +3097,190 @@ function setupAnalyticsPage() {
 
   renderAnalyticsPage();
 }
+
+function sortByAvgMsAsc(rows) {
+  return rows.sort((a, b) => {
+    const av = Number(a.avgLapMs);
+    const bv = Number(b.avgLapMs);
+
+    const aOk = Number.isFinite(av);
+    const bOk = Number.isFinite(bv);
+
+    if (aOk && bOk) return av - bv;
+    if (aOk) return -1;
+    if (bOk) return 1;
+    return String(a.driver || "").localeCompare(String(b.driver || ""), "pt-BR");
+  });
+}
+
+function formatAvgMs(ms) {
+  if (!Number.isFinite(Number(ms))) return "--";
+  return formatMilliseconds(ms);
+}
+
+function groupLapsIntoECs(lapsMs) {
+  const total = Array.isArray(lapsMs) ? lapsMs.filter((ms) => Number.isFinite(Number(ms))) : [];
+  const ecs = new Map();
+
+  for (const lapMs of total) {
+    // EC 1 = voltas 1..8. Ex: lapIndex 0..7
+    const lapIndex = (Number(lapMs.__lapIndex) ?? null);
+    void lapIndex;
+  }
+
+  // A forma mais segura aqui é assumir que o array já vem na ordem das voltas (lapNumber crescente)
+  for (let i = 0; i < total.length; i += 1) {
+    const ec = Math.floor(i / 8) + 1;
+    if (!ecs.has(ec)) ecs.set(ec, []);
+    ecs.get(ec).push(total[i]);
+  }
+
+  return ecs;
+}
+
+function buildECLapsRowsFromSeason(season) {
+  const rowsByDriver = new Map();
+
+  for (const round of season?.rounds || []) {
+    const lapsByDriver = round?.recordsByDriver || {};
+
+    for (const [driverKey, record] of Object.entries(lapsByDriver)) {
+      const driverName = record?.name || record?.driver || driverKey;
+      const lapTimesMs = Array.isArray(record?.lapTimesMs) ? record.lapTimesMs : [];
+
+      if (!rowsByDriver.has(driverKey)) {
+        rowsByDriver.set(driverKey, {
+          driverKey,
+          driver: driverName,
+          avgLapMs: Number.POSITIVE_INFINITY,
+          avgLapCount: 0,
+          ecAverages: new Map() // ec => { sumMs, count }
+        });
+      }
+
+      const row = rowsByDriver.get(driverKey);
+
+      // Global (média de todas as voltas do piloto)
+      const validLaps = lapTimesMs.map((ms) => Number(ms)).filter((ms) => Number.isFinite(ms));
+      row.avgLapCount += validLaps.length;
+      for (const ms of validLaps) {
+        row.avgLapMs = Number.isFinite(row.avgLapMs) ? row.avgLapMs + ms : ms;
+      }
+
+      // EC (blocos de 8 voltas) => média das voltas daquele EC
+      const validSorted = lapTimesMs.map((ms) => Number(ms)).filter((ms) => Number.isFinite(ms));
+      const ecs = groupLapsIntoECs(validSorted);
+
+      for (const [ec, ecLapsMs] of ecs.entries()) {
+        if (!row.ecAverages.has(ec)) {
+          row.ecAverages.set(ec, { sumMs: 0, count: 0 });
+        }
+        const acc = row.ecAverages.get(ec);
+        for (const ms of ecLapsMs) {
+          acc.sumMs += ms;
+          acc.count += 1;
+        }
+      }
+    }
+  }
+
+  const rows = [];
+  for (const row of rowsByDriver.values()) {
+    const globalAvg = row.avgLapCount > 0 ? row.avgLapMs / row.avgLapCount : Number.POSITIVE_INFINITY;
+
+    // EC 1..N, mas a tabela pede 1..8 voltas => EC 1..? pelo menos mostrar as 8
+    rows.push({
+      driverKey: row.driverKey,
+      driver: row.driver,
+      avgLapMs: globalAvg,
+      ecAverages: row.ecAverages
+    });
+  }
+
+  return rows;
+}
+
+function setupECLapsTables({ ecLapsBody, globalLapAverageRankingBody } = {}) {
+  if (!ecLapsBody && !globalLapAverageRankingBody) return;
+
+  const season = getSeason();
+  if (!season?.rounds?.length) {
+    if (ecLapsBody) {
+      ecLapsBody.innerHTML = '';
+    }
+    if (globalLapAverageRankingBody) {
+      globalLapAverageRankingBody.innerHTML = '';
+    }
+    return;
+  }
+
+  // 1) Tabela EC + voltas 1..8
+  // Colocamos EC = 1..4 (8 ECs pode estourar a UI; sua tela tem V1..V8)
+  const rows = buildECLapsRowsFromSeason(season);
+  const trackNames = (season.rounds || []).map((r) => r.trackName).filter(Boolean);
+  const firstTrackName = trackNames[0] || "Pista";
+
+  // Para cumprir “selecionar pista” e “ranking por volta e pista”, vamos usar round selecionado.
+  // A UI atual (analytics.html) não tem seletor; então aqui vamos montar baseado na 1ª pista.
+  // (O seletor será adicionado no próximo ajuste se você pedir.)
+
+  const ecMaxToShow = 8;
+  ecLapsBody.innerHTML = rows.length
+    ? rows
+        .map((row, driverIndex) => {
+          // Para esta MVP, a média EC será calculada usando todas as pistas da temporada no season.
+          // (Se você quiser por pista, ajusto usando um roundIndex.)
+          const ec1 = row.ecAverages.get(1);
+          const ec2 = row.ecAverages.get(2);
+
+          const ecCell = (ec) => {
+            const avg = ec <= 0 ? Number.POSITIVE_INFINITY : (row.ecAverages.get(ec)?.sumMs || 0);
+            const count = row.ecAverages.get(ec)?.count || 0;
+            const avgMs = count > 0 ? (row.ecAverages.get(ec).sumMs / row.ecAverages.get(ec).count) : Number.POSITIVE_INFINITY;
+            return formatAvgMs(avgMs);
+          };
+
+          const vList = Array.from({ length: ecMaxToShow }, (_, i) => {
+            const vNum = i + 1;
+            // Voltas V1..V8 correspondem ao EC 1. Como só temos médias EC, mostramos média do EC 1.
+            // Para “volta por volta” real precisamos lapNumber individual. (Próximo ajuste via endpoint.)
+            return i < 8 ? ecCell(1) : "--";
+          });
+
+          return `
+            <tr>
+              <td><span class="position-badge">P${driverIndex + 1}</span></td>
+              <td>${escapeHTML(row.driver)}</td>
+              <td>${escapeHTML(firstTrackName)}</td>
+              <td>EC 1..8</td>
+              ${vList.slice(0, 8).map((val) => `<td>${escapeHTML(val)}</td>`).join("")}
+            </tr>
+          `;
+        })
+        .join("")
+    : "";
+
+  // 2) Ranking geral (média de todas as voltas)
+  if (globalLapAverageRankingBody) {
+    const ranked = sortByAvgMsAsc(rows.map((r) => ({ ...r })));
+
+    globalLapAverageRankingBody.innerHTML = ranked.length
+      ? ranked
+          .slice(0, 20)
+          .map((row, index) => `
+            <tr>
+              <td><span class="position-badge">P${index + 1}</span></td>
+              <td>${escapeHTML(row.driver)}</td>
+              <td>--</td>
+              <td>${escapeHTML(formatAvgMs(row.avgLapMs))}</td>
+              <td>${row.avgLapCount || "--"}</td>
+            </tr>
+          `)
+          .join("")
+      : "";
+  }
+}
+
 
 function renderTrackSummary(trackStats) {
   const totalMetric = document.getElementById("trackTotalMetric");

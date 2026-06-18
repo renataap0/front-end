@@ -77,6 +77,12 @@ async function deleteDriver(id, user) {
     throw new AppError("Apenas admin pode excluir pilotos.", 403);
   }
 
+  const driver = await driversDao.findDriverById(id);
+
+  if (!driver) {
+    throw new AppError("Piloto nao encontrado.", 404);
+  }
+
   return driversDao.deleteDriver(id);
 }
 
