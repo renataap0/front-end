@@ -4,15 +4,18 @@ const { mapTeam } = require("./mappers");
 const teamColumns = `
   id,
   nome AS name,
-  NULL AS country,
-  NULL AS principal,
-  NULL AS foundedYear,
-  NULL AS createdAt,
-  NULL AS updatedAt
+  pais AS country,
+  chefe AS principal,
+  ano_fundacao AS foundedYear,
+  criado_em AS createdAt,
+  atualizado_em AS updatedAt
 `;
 
 const teamColumnMap = {
-  name: "nome"
+  name: "nome",
+  country: "pais",
+  principal: "chefe",
+  foundedYear: "ano_fundacao"
 };
 
 async function listTeams(query = {}) {
@@ -20,12 +23,12 @@ async function listTeams(query = {}) {
   const params = [];
 
   if (query.name) {
-    where.push("name LIKE ?");
+    where.push("nome LIKE ?");
     params.push(`%${query.name}%`);
   }
 
   if (query.country) {
-    where.push("country LIKE ?");
+    where.push("pais LIKE ?");
     params.push(`%${query.country}%`);
   }
 
@@ -33,7 +36,7 @@ async function listTeams(query = {}) {
     SELECT ${teamColumns}
     FROM equipes
     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
-    ORDER BY name ASC
+    ORDER BY nome ASC
   `;
 
   return (await rows(sql, params)).map((row) => mapTeam(row));

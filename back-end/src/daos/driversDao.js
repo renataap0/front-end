@@ -4,38 +4,40 @@ const { mapDriver, mapTeam } = require("./mappers");
 const driverColumns = `
   d.id,
   d.nome AS name,
-  NULL AS nationality,
+  d.nacionalidade AS nationality,
   d.status,
-  NULL AS number,
+  d.numero AS number,
   d.equipe_id AS teamId,
-  NULL AS createdAt,
-  NULL AS updatedAt
+  d.criado_em AS createdAt,
+  d.atualizado_em AS updatedAt
 `;
 
 const driverPlainColumns = `
   id,
   nome AS name,
-  NULL AS nationality,
+  nacionalidade AS nationality,
   status,
-  NULL AS number,
+  numero AS number,
   equipe_id AS teamId,
-  NULL AS createdAt,
-  NULL AS updatedAt
+  criado_em AS createdAt,
+  atualizado_em AS updatedAt
 `;
 
 const teamJoinColumns = `
   t.id AS team_id,
   t.nome AS team_name,
-  NULL AS team_country,
-  NULL AS team_principal,
-  NULL AS team_foundedYear,
-  NULL AS team_createdAt,
-  NULL AS team_updatedAt
+  t.pais AS team_country,
+  t.chefe AS team_principal,
+  t.ano_fundacao AS team_foundedYear,
+  t.criado_em AS team_createdAt,
+  t.atualizado_em AS team_updatedAt
 `;
 
 const driverColumnMap = {
   name: "nome",
+  nationality: "nacionalidade",
   status: "status",
+  number: "numero",
   teamId: "equipe_id"
 };
 

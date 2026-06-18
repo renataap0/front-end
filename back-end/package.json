@@ -8,7 +8,9 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "db:setup": "node database/seed.js"
+    "db:setup": "node database/seed.js",
+    "test": "npm run test:integration",
+    "test:integration": "node tests/integration.test.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

@@ -41,6 +41,10 @@ async function assertRaceEntities(data, user) {
     throw new AppError("Piloto e carro devem pertencer a equipe da corrida.", 400);
   }
 
+  if (car.driverId && car.driverId !== driver.id) {
+    throw new AppError("O carro selecionado pertence a outro piloto.", 400);
+  }
+
   return teamId;
 }
 

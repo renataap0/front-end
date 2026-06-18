@@ -59,7 +59,7 @@ DB_USER=root
 DB_PASSWORD=root
 DB_NAME=corridapro
 PORT=3000
-JWT_SECRET=chave_racing_angels
+JWT_SECRET=gere_uma_chave_aleatoria_com_32_ou_mais_caracteres
 ```
 
 Altere `DB_PASSWORD` para a senha do seu MySQL.
@@ -189,4 +189,3 @@ Confirme que:
 - `http://localhost:3000/health` responde
 - O login foi realizado
 - O MySQL continua iniciado
-

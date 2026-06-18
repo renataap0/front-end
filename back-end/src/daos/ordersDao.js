@@ -3,18 +3,18 @@ const { mapOrder, mapOrderItem, mapProduct, mapUser } = require("./mappers");
 
 const orderColumns = `
   o.id,
-  CONCAT('RA-', LPAD(o.id, 6, '0')) AS code,
+  o.codigo AS code,
   o.usuario_id AS userId,
-  u.nome_usuario AS customerName,
-  '' AS customerEmail,
-  '' AS customerZip,
-  'site' AS paymentMethod,
-  o.valor_total AS subtotal,
+  o.nome_cliente AS customerName,
+  o.email_cliente AS customerEmail,
+  o.cep_cliente AS customerZip,
+  o.metodo_pagamento AS paymentMethod,
+  o.valor_subtotal AS subtotal,
   o.valor_frete AS shipping,
-  (o.valor_total + o.valor_frete) AS total,
-  'aprovado' AS status,
+  o.valor_total AS total,
+  o.status,
   o.criado_em AS createdAt,
-  NULL AS updatedAt
+  o.atualizado_em AS updatedAt
 `;
 
 const userJoinColumns = `
@@ -24,7 +24,7 @@ const userJoinColumns = `
   p.equipe_id AS user_teamId,
   p.id AS user_driverId,
   u.criado_em AS user_createdAt,
-  NULL AS user_updatedAt
+  u.atualizado_em AS user_updatedAt
 `;
 
 function attachOrderUser(row) {
@@ -55,13 +55,13 @@ async function attachItems(orders, connection = null) {
         (oi.quantidade * oi.preco_unitario) AS total,
         p.id AS product_id,
         p.nome AS product_name,
-        NULL AS product_description,
+        p.descricao AS product_description,
         p.preco AS product_price,
-        999 AS product_stock,
-        NULL AS product_imageUrl,
-        1 AS product_active,
-        NULL AS product_createdAt,
-        NULL AS product_updatedAt
+        p.estoque AS product_stock,
+        p.imagem_url AS product_imageUrl,
+        p.ativo AS product_active,
+        p.criado_em AS product_createdAt,
+        p.atualizado_em AS product_updatedAt
       FROM itens_pedido oi
       INNER JOIN produtos p ON p.id = oi.produto_id
       WHERE oi.pedido_id IN (${inClause(orderIds)})
@@ -134,13 +134,31 @@ async function findOrderById(id, user = null, connection = null) {
 async function createOrder(data, items, connection) {
   const orderResult = await execute(
     `
-      INSERT INTO pedidos (usuario_id, valor_total, valor_frete)
-      VALUES (?, ?, ?)
+      INSERT INTO pedidos (
+        codigo,
+        usuario_id,
+        nome_cliente,
+        email_cliente,
+        cep_cliente,
+        metodo_pagamento,
+        valor_subtotal,
+        valor_frete,
+        valor_total,
+        status
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
+      data.code,
       data.userId,
+      data.customerName,
+      data.customerEmail,
+      data.customerZip,
+      data.paymentMethod,
       data.subtotal,
-      data.shipping
+      data.shipping,
+      data.total,
+      "aprovado"
     ],
     connection
   );
@@ -165,7 +183,7 @@ async function countOrders() {
 }
 
 async function sumRevenue() {
-  const result = await rows("SELECT COALESCE(SUM(valor_total + valor_frete), 0) AS total FROM pedidos");
+  const result = await rows("SELECT COALESCE(SUM(valor_total), 0) AS total FROM pedidos");
   return Number(result[0].total);
 }
 

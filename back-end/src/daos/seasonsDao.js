@@ -1,36 +1,36 @@
-const { execute, inClause, insertAndFind, rows } = require("./helpers");
+const { execute, inClause, rows, toMysqlDate } = require("./helpers");
 const { transaction } = require("../config/database");
 const { mapCar, mapDriver, mapSeason, mapSeasonRound, mapSeasonRoundLap, mapTrack } = require("./mappers");
 
 const seasonColumns = `
   id,
-  CONCAT('Temporada ', versao) AS name,
-  2026 AS year,
-  'Ativa' AS status,
+  nome AS name,
+  ano AS year,
+  status,
   criado_em AS createdAt,
-  NULL AS updatedAt
+  atualizado_em AS updatedAt
 `;
 
 const roundColumns = `
   sr.id,
   sr.temporada_id AS seasonId,
-  NULL AS raceId,
+  sr.corrida_id AS raceId,
   sr.pista_id AS trackId,
-  tr.nome AS name,
+  sr.nome AS name,
   sr.ordem_indice AS roundNumber,
-  NULL AS scheduledAt,
-  NULL AS createdAt,
-  NULL AS updatedAt
+  sr.agendada_em AS scheduledAt,
+  sr.criado_em AS createdAt,
+  sr.atualizado_em AS updatedAt
 `;
 
 const lapColumns = `
   l.id,
   l.etapa_temporada_id AS seasonRoundId,
   l.piloto_id AS driverId,
-  c.id AS carId,
+  l.carro_id AS carId,
   l.numero_volta AS lapNumber,
   l.tempo_volta_ms AS lapTimeMs,
-  NULL AS createdAt
+  l.criado_em AS createdAt
 `;
 
 function trackJoinColumns() {
@@ -40,16 +40,16 @@ function trackJoinColumns() {
     tr.pais AS track_country,
     tr.cidade AS track_city,
     tr.tamanho_km AS track_lengthKm,
-    0 AS track_turns,
-    3 AS track_sectors,
-    90000 AS track_recordLapMs,
-    80 AS track_grip,
-    0 AS track_elevation,
+    tr.curvas AS track_turns,
+    tr.setores AS track_sectors,
+    tr.recorde_volta_ms AS track_recordLapMs,
+    tr.aderencia AS track_grip,
+    tr.elevacao AS track_elevation,
     tr.tipo AS track_type,
-    'Variavel' AS track_weather,
-    50 AS track_abrasion,
-    NULL AS track_createdAt,
-    NULL AS track_updatedAt
+    tr.clima AS track_weather,
+    tr.abrasao AS track_abrasion,
+    tr.criado_em AS track_createdAt,
+    tr.atualizado_em AS track_updatedAt
   `;
 }
 
@@ -57,12 +57,12 @@ function driverJoinColumns() {
   return `
     d.id AS driver_id,
     d.nome AS driver_name,
-    NULL AS driver_nationality,
+    d.nacionalidade AS driver_nationality,
     d.status AS driver_status,
-    NULL AS driver_number,
+    d.numero AS driver_number,
     d.equipe_id AS driver_teamId,
-    NULL AS driver_createdAt,
-    NULL AS driver_updatedAt
+    d.criado_em AS driver_createdAt,
+    d.atualizado_em AS driver_updatedAt
   `;
 }
 
@@ -70,7 +70,7 @@ function carJoinColumns() {
   return `
     c.id AS car_id,
     c.modelo AS car_model,
-    c.modelo AS car_code,
+    c.codigo AS car_code,
     c.equipe_id AS car_teamId,
     c.piloto_id AS car_driverId,
     c.potencia AS car_power,
@@ -81,8 +81,8 @@ function carJoinColumns() {
     c.velocidade_maxima AS car_topSpeed,
     c.peso AS car_weight,
     c.pacote AS car_packageName,
-    NULL AS car_createdAt,
-    NULL AS car_updatedAt
+    c.criado_em AS car_createdAt,
+    c.atualizado_em AS car_updatedAt
   `;
 }
 
@@ -159,7 +159,10 @@ async function findSeasonById(id) {
 }
 
 async function createSeason(data) {
-  const result = await execute("INSERT INTO temporadas (versao) VALUES (?)", [data.year || new Date().getFullYear()]);
+  const result = await execute(
+    "INSERT INTO temporadas (versao, nome, ano, status) VALUES (?, ?, ?, ?)",
+    [data.year, data.name, data.year, data.status]
+  );
   return findSeasonById(result.insertId);
 }
 
@@ -181,10 +184,26 @@ async function findSeasonRoundById(id, connection = null) {
 async function createSeasonRound(seasonId, data) {
   const result = await execute(
     `
-      INSERT INTO etapas_temporada (temporada_id, pista_id, ordem_indice, status)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO etapas_temporada (
+        temporada_id,
+        corrida_id,
+        pista_id,
+        nome,
+        ordem_indice,
+        status,
+        agendada_em
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `,
-    [seasonId, data.trackId, data.roundNumber, data.status || "pendente"]
+    [
+      seasonId,
+      data.raceId,
+      data.trackId,
+      data.name,
+      data.roundNumber,
+      "pendente",
+      toMysqlDate(data.scheduledAt)
+    ]
   );
 
   return findSeasonRoundById(result.insertId);
@@ -193,10 +212,10 @@ async function createSeasonRound(seasonId, data) {
 async function createSeasonRoundLap(seasonRoundId, data) {
   const result = await execute(
     `
-      INSERT INTO voltas_etapa (etapa_temporada_id, piloto_id, tempo_volta_ms, numero_volta)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO voltas_etapa (etapa_temporada_id, piloto_id, carro_id, tempo_volta_ms, numero_volta)
+      VALUES (?, ?, ?, ?, ?)
     `,
-    [seasonRoundId, data.driverId, data.lapTimeMs, data.lapNumber]
+    [seasonRoundId, data.driverId, data.carId, data.lapTimeMs, data.lapNumber]
   );
 
   const laps = await listLapsByIds([result.insertId]);
@@ -210,10 +229,10 @@ async function createSeasonRoundLaps(seasonRoundId, laps) {
     for (const lap of laps) {
       const result = await execute(
         `
-          INSERT INTO voltas_etapa (etapa_temporada_id, piloto_id, tempo_volta_ms, numero_volta)
-          VALUES (?, ?, ?, ?)
+          INSERT INTO voltas_etapa (etapa_temporada_id, piloto_id, carro_id, tempo_volta_ms, numero_volta)
+          VALUES (?, ?, ?, ?, ?)
         `,
-        [seasonRoundId, lap.driverId, lap.lapTimeMs, lap.lapNumber],
+        [seasonRoundId, lap.driverId, lap.carId, lap.lapTimeMs, lap.lapNumber],
         connection
       );
       ids.push(result.insertId);
@@ -233,7 +252,7 @@ async function listLapsByIds(ids, connection = null) {
       SELECT ${lapColumns}, ${driverJoinColumns()}, ${carJoinColumns()}
       FROM voltas_etapa l
       INNER JOIN pilotos d ON d.id = l.piloto_id
-      LEFT JOIN carros c ON c.piloto_id = d.id
+      LEFT JOIN carros c ON c.id = l.carro_id
       WHERE l.id IN (${inClause(ids)})
       ORDER BY l.numero_volta ASC, l.id ASC
     `,
@@ -254,7 +273,7 @@ async function listLapsByRoundIds(roundIds) {
       SELECT ${lapColumns}, ${driverJoinColumns()}, ${carJoinColumns()}
       FROM voltas_etapa l
       INNER JOIN pilotos d ON d.id = l.piloto_id
-      LEFT JOIN carros c ON c.piloto_id = d.id
+      LEFT JOIN carros c ON c.id = l.carro_id
       WHERE l.etapa_temporada_id IN (${inClause(roundIds)})
       ORDER BY l.numero_volta ASC, l.id ASC
     `,

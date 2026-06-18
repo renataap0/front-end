@@ -8,13 +8,13 @@ const raceColumns = `
   r.voltas AS laps,
   r.melhor_volta_ms AS bestLapMs,
   r.ultima_volta_ms AS lastLapMs,
-  r.criado_em AS raceDate,
+  r.data_corrida AS raceDate,
   r.equipe_id AS teamId,
   r.piloto_id AS driverId,
   r.pista_id AS trackId,
   r.carro_id AS carId,
   r.criado_em AS createdAt,
-  NULL AS updatedAt
+  r.atualizado_em AS updatedAt
 `;
 
 const racePlainColumns = `
@@ -24,13 +24,13 @@ const racePlainColumns = `
   voltas AS laps,
   melhor_volta_ms AS bestLapMs,
   ultima_volta_ms AS lastLapMs,
-  criado_em AS raceDate,
+  data_corrida AS raceDate,
   equipe_id AS teamId,
   piloto_id AS driverId,
   pista_id AS trackId,
   carro_id AS carId,
   criado_em AS createdAt,
-  NULL AS updatedAt
+  atualizado_em AS updatedAt
 `;
 
 const raceColumnMap = {
@@ -39,6 +39,7 @@ const raceColumnMap = {
   laps: "voltas",
   bestLapMs: "melhor_volta_ms",
   lastLapMs: "ultima_volta_ms",
+  raceDate: "data_corrida",
   teamId: "equipe_id",
   driverId: "piloto_id",
   trackId: "pista_id",
@@ -48,22 +49,22 @@ const raceColumnMap = {
 const teamJoinColumns = `
   t.id AS team_id,
   t.nome AS team_name,
-  NULL AS team_country,
-  NULL AS team_principal,
-  NULL AS team_foundedYear,
-  NULL AS team_createdAt,
-  NULL AS team_updatedAt
+  t.pais AS team_country,
+  t.chefe AS team_principal,
+  t.ano_fundacao AS team_foundedYear,
+  t.criado_em AS team_createdAt,
+  t.atualizado_em AS team_updatedAt
 `;
 
 const driverJoinColumns = `
   d.id AS driver_id,
   d.nome AS driver_name,
-  NULL AS driver_nationality,
+  d.nacionalidade AS driver_nationality,
   d.status AS driver_status,
-  NULL AS driver_number,
+  d.numero AS driver_number,
   d.equipe_id AS driver_teamId,
-  NULL AS driver_createdAt,
-  NULL AS driver_updatedAt
+  d.criado_em AS driver_createdAt,
+  d.atualizado_em AS driver_updatedAt
 `;
 
 const trackJoinColumns = `
@@ -72,22 +73,22 @@ const trackJoinColumns = `
   tr.pais AS track_country,
   tr.cidade AS track_city,
   tr.tamanho_km AS track_lengthKm,
-  0 AS track_turns,
-  3 AS track_sectors,
-  90000 AS track_recordLapMs,
-  80 AS track_grip,
-  0 AS track_elevation,
+  tr.curvas AS track_turns,
+  tr.setores AS track_sectors,
+  tr.recorde_volta_ms AS track_recordLapMs,
+  tr.aderencia AS track_grip,
+  tr.elevacao AS track_elevation,
   tr.tipo AS track_type,
-  'Variavel' AS track_weather,
-  50 AS track_abrasion,
-  NULL AS track_createdAt,
-  NULL AS track_updatedAt
+  tr.clima AS track_weather,
+  tr.abrasao AS track_abrasion,
+  tr.criado_em AS track_createdAt,
+  tr.atualizado_em AS track_updatedAt
 `;
 
 const carJoinColumns = `
   c.id AS car_id,
   c.modelo AS car_model,
-  c.modelo AS car_code,
+  c.codigo AS car_code,
   c.equipe_id AS car_teamId,
   c.piloto_id AS car_driverId,
   c.potencia AS car_power,
@@ -98,13 +99,14 @@ const carJoinColumns = `
   c.velocidade_maxima AS car_topSpeed,
   c.peso AS car_weight,
   c.pacote AS car_packageName,
-  NULL AS car_createdAt,
-  NULL AS car_updatedAt
+  c.criado_em AS car_createdAt,
+  c.atualizado_em AS car_updatedAt
 `;
 
 function normalizeRacePayload(data) {
   return {
-    ...data
+    ...data,
+    raceDate: toMysqlDate(data.raceDate)
   };
 }
 

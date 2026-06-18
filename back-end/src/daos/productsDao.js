@@ -4,18 +4,22 @@ const { mapProduct } = require("./mappers");
 const productColumns = `
   id,
   nome AS name,
-  NULL AS description,
+  descricao AS description,
   preco AS price,
-  999 AS stock,
-  NULL AS imageUrl,
-  1 AS active,
-  NULL AS createdAt,
-  NULL AS updatedAt
+  estoque AS stock,
+  imagem_url AS imageUrl,
+  ativo AS active,
+  criado_em AS createdAt,
+  atualizado_em AS updatedAt
 `;
 
 const productColumnMap = {
   name: "nome",
-  price: "preco"
+  description: "descricao",
+  price: "preco",
+  stock: "estoque",
+  imageUrl: "imagem_url",
+  active: "ativo"
 };
 
 function normalizeProductPayload(data) {
@@ -30,9 +34,8 @@ async function listProducts(query = {}) {
   const params = [];
 
   if (query.active !== undefined) {
-    if (String(query.active) !== "true") {
-      where.push("1 = 0");
-    }
+    where.push("ativo = ?");
+    params.push(String(query.active) === "true" ? 1 : 0);
   }
 
   if (query.name) {
@@ -62,7 +65,7 @@ async function listActiveProductsByIds(ids, connection = null) {
 
   const placeholders = ids.map(() => "?").join(", ");
   const result = await rows(
-    `SELECT ${productColumns} FROM produtos WHERE id IN (${placeholders})`,
+    `SELECT ${productColumns} FROM produtos WHERE ativo = 1 AND id IN (${placeholders})${connection ? " FOR UPDATE" : ""}`,
     ids,
     connection
   );
@@ -79,7 +82,11 @@ async function updateProduct(id, data) {
 }
 
 async function decrementStock(id, quantity, connection = null) {
-  return { affectedRows: 1, warningStatus: 0 };
+  return execute(
+    "UPDATE produtos SET estoque = estoque - ? WHERE id = ? AND estoque >= ?",
+    [quantity, id, quantity],
+    connection
+  );
 }
 
 async function deleteProduct(id) {

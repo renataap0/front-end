@@ -4,7 +4,7 @@ const { mapCar, mapDriver, mapTeam } = require("./mappers");
 const carColumns = `
   c.id,
   c.modelo AS model,
-  c.modelo AS code,
+  c.codigo AS code,
   c.equipe_id AS teamId,
   c.piloto_id AS driverId,
   c.potencia AS power,
@@ -15,14 +15,14 @@ const carColumns = `
   c.velocidade_maxima AS topSpeed,
   c.peso AS weight,
   c.pacote AS packageName,
-  NULL AS createdAt,
-  NULL AS updatedAt
+  c.criado_em AS createdAt,
+  c.atualizado_em AS updatedAt
 `;
 
 const carPlainColumns = `
   id,
   modelo AS model,
-  modelo AS code,
+  codigo AS code,
   equipe_id AS teamId,
   piloto_id AS driverId,
   potencia AS power,
@@ -33,12 +33,13 @@ const carPlainColumns = `
   velocidade_maxima AS topSpeed,
   peso AS weight,
   pacote AS packageName,
-  NULL AS createdAt,
-  NULL AS updatedAt
+  criado_em AS createdAt,
+  atualizado_em AS updatedAt
 `;
 
 const carColumnMap = {
   model: "modelo",
+  code: "codigo",
   teamId: "equipe_id",
   driverId: "piloto_id",
   power: "potencia",
@@ -54,22 +55,22 @@ const carColumnMap = {
 const teamJoinColumns = `
   t.id AS team_id,
   t.nome AS team_name,
-  NULL AS team_country,
-  NULL AS team_principal,
-  NULL AS team_foundedYear,
-  NULL AS team_createdAt,
-  NULL AS team_updatedAt
+  t.pais AS team_country,
+  t.chefe AS team_principal,
+  t.ano_fundacao AS team_foundedYear,
+  t.criado_em AS team_createdAt,
+  t.atualizado_em AS team_updatedAt
 `;
 
 const driverJoinColumns = `
   d.id AS driver_id,
   d.nome AS driver_name,
-  NULL AS driver_nationality,
+  d.nacionalidade AS driver_nationality,
   d.status AS driver_status,
-  NULL AS driver_number,
+  d.numero AS driver_number,
   d.equipe_id AS driver_teamId,
-  NULL AS driver_createdAt,
-  NULL AS driver_updatedAt
+  d.criado_em AS driver_createdAt,
+  d.atualizado_em AS driver_updatedAt
 `;
 
 function attachRelations(row) {
@@ -108,7 +109,7 @@ async function listCars(query = {}) {
       SELECT ${carColumns}, ${teamJoinColumns}, ${driverJoinColumns}
       FROM carros c
       INNER JOIN equipes t ON t.id = c.equipe_id
-      INNER JOIN pilotos d ON d.id = c.piloto_id
+      LEFT JOIN pilotos d ON d.id = c.piloto_id
       ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
       ORDER BY c.modelo ASC
     `,
@@ -160,7 +161,7 @@ async function findCarById(id, connection = null) {
       SELECT ${carColumns}, ${teamJoinColumns}, ${driverJoinColumns}
       FROM carros c
       INNER JOIN equipes t ON t.id = c.equipe_id
-      INNER JOIN pilotos d ON d.id = c.piloto_id
+      LEFT JOIN pilotos d ON d.id = c.piloto_id
       WHERE c.id = ?
     `,
     [id],

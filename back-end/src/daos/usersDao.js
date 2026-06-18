@@ -9,7 +9,7 @@ const userColumns = `
   p.equipe_id AS teamId,
   p.id AS driverId,
   u.criado_em AS createdAt,
-  NULL AS updatedAt
+  u.atualizado_em AS updatedAt
 `;
 
 const userPublicColumns = `
@@ -19,25 +19,25 @@ const userPublicColumns = `
   p.equipe_id AS teamId,
   p.id AS driverId,
   u.criado_em AS createdAt,
-  NULL AS updatedAt
+  u.atualizado_em AS updatedAt
 `;
 
 const joinedUserColumns = `
   t.id AS team_id,
   t.nome AS team_name,
-  NULL AS team_country,
-  NULL AS team_principal,
-  NULL AS team_foundedYear,
-  NULL AS team_createdAt,
-  NULL AS team_updatedAt,
+  t.pais AS team_country,
+  t.chefe AS team_principal,
+  t.ano_fundacao AS team_foundedYear,
+  t.criado_em AS team_createdAt,
+  t.atualizado_em AS team_updatedAt,
   d.id AS driver_id,
   d.nome AS driver_name,
-  NULL AS driver_nationality,
+  d.nacionalidade AS driver_nationality,
   d.status AS driver_status,
-  NULL AS driver_number,
+  d.numero AS driver_number,
   d.equipe_id AS driver_teamId,
-  NULL AS driver_createdAt,
-  NULL AS driver_updatedAt
+  d.criado_em AS driver_createdAt,
+  d.atualizado_em AS driver_updatedAt
 `;
 
 function attachUserRelations(row, includePassword = false) {

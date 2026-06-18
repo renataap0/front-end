@@ -5,6 +5,14 @@ const optionalText = z.string().trim().optional();
 const positiveInt = z.coerce.number().int().positive();
 const nonNegativeInt = z.coerce.number().int().nonnegative();
 const percent = z.coerce.number().int().min(0).max(100);
+const driverStatus = z.enum([
+  "Titular",
+  "Reserva",
+  "Em avaliacao",
+  "titular",
+  "reserva",
+  "em avaliacao"
+]);
 const booleanLike = z.preprocess((value) => {
   if (value === "true") return true;
   if (value === "false") return false;
@@ -21,7 +29,7 @@ const teamCreateSchema = z.object({
 const driverCreateSchema = z.object({
   name: text,
   nationality: optionalText,
-  status: z.string().trim().default("Titular"),
+  status: driverStatus.default("Titular"),
   number: z.coerce.number().int().positive().optional(),
   teamId: positiveInt.optional()
 });
@@ -106,8 +114,8 @@ const productCreateSchema = z.object({
 const orderCreateSchema = z.object({
   customerName: text,
   customerEmail: z.string().email(),
-  customerZip: z.string().trim().min(8),
-  paymentMethod: text,
+  customerZip: z.string().trim().regex(/^\d{5}-?\d{3}$/),
+  paymentMethod: z.enum(["card", "pix", "boleto"]),
   items: z.array(
     z.object({
       productId: positiveInt,

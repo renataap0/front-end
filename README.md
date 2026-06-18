@@ -90,7 +90,7 @@ DB_NAME=corridapro
 DB_CONNECTION_LIMIT=10
 
 PORT=3000
-JWT_SECRET="troque_essa_chave"
+JWT_SECRET="gere_uma_chave_aleatoria_com_32_ou_mais_caracteres"
 ```
 
 Crie o banco no MySQL:
@@ -258,6 +258,18 @@ curl http://localhost:3000/api/races ^
   -H "Authorization: Bearer SEU_TOKEN"
 ```
 
+## Testes automatizados
+
+Na pasta `back-end`, execute:
+
+```bash
+npm test
+```
+
+A suite recria o banco de demonstracao, valida autenticacao, permissoes,
+CRUDs, filtros, temporadas, voltas, pedidos, estoque, analytics e dashboard.
+Ao terminar, o seed original e restaurado automaticamente.
+
 ## Banco de dados
 
 O modelo esta em `back-end/database/schema.sql`.
@@ -293,5 +305,5 @@ O seed esta em `back-end/database/seed.js` e cria dados iniciais alinhados ao fr
 
 ## Pontos de atencao
 
-- O arquivo `back-end/.env` esta rastreado pelo Git. O ideal e manter apenas `back-end/.env.example` no repositorio e deixar `.env` somente local.
+- Mantenha apenas `back-end/.env.example` no repositorio. O arquivo `back-end/.env` deve permanecer somente no ambiente local.
 - O front-end tem caminhos de assets e paginas que precisam ser conferidos antes de uma demonstracao visual.

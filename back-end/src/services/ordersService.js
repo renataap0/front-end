@@ -1,3 +1,4 @@
+const { randomUUID } = require("crypto");
 const { transaction } = require("../config/database");
 const ordersDao = require("../daos/ordersDao");
 const productsDao = require("../daos/productsDao");
@@ -57,12 +58,16 @@ async function createOrder(data, user) {
     const total = subtotal + shipping;
 
     for (const item of items) {
-      await productsDao.decrementStock(item.product.id, item.quantity, connection);
+      const result = await productsDao.decrementStock(item.product.id, item.quantity, connection);
+
+      if (result.affectedRows !== 1) {
+        throw new AppError(`Estoque insuficiente para ${item.product.name}.`, 409);
+      }
     }
 
     const order = await ordersDao.createOrder(
       {
-        code: `RA-${Date.now().toString().slice(-8)}`,
+        code: `RA-${randomUUID().replace(/-/g, "").slice(0, 12).toUpperCase()}`,
         userId: user.id,
         customerName: data.customerName,
         customerEmail: data.customerEmail,
