@@ -1231,6 +1231,7 @@ h3 {
 
 .login-form label,
 .manual-race-form label,
+.driver-create-form label,
 .driver-editor label {
   display: grid;
   gap: 7px;
@@ -1240,6 +1241,8 @@ h3 {
 .manual-race-form input,
 .manual-race-form select,
 .manual-race-form textarea,
+.driver-create-form input,
+.driver-create-form select,
 .driver-editor input,
 .driver-editor select,
 .track-car-form input,
@@ -1285,6 +1288,8 @@ h3 {
 .manual-race-form input:focus,
 .manual-race-form select:focus,
 .manual-race-form textarea:focus,
+.driver-create-form input:focus,
+.driver-create-form select:focus,
 .driver-editor input:focus,
 .driver-editor select:focus {
 
@@ -1303,6 +1308,8 @@ h3 {
 .manual-race-form input:focus,
 .manual-race-form select:focus,
 .manual-race-form textarea:focus,
+.driver-create-form input:focus,
+.driver-create-form select:focus,
 .driver-editor input:focus,
 .driver-editor select:focus {
   border-color: rgba(199, 161, 90, 0.72);
@@ -1312,6 +1319,9 @@ h3 {
 .manual-race-form input:disabled,
 .manual-race-form select:disabled,
 .manual-race-form textarea:disabled,
+.driver-create-form input:disabled,
+.driver-create-form select:disabled,
+.driver-create-form button:disabled,
 .driver-editor input:disabled,
 .driver-editor select:disabled,
 .manual-race-form button:disabled {
@@ -1345,6 +1355,13 @@ h3 {
   gap: 18px;
   align-items: start;
   margin-top: 24px;
+}
+
+.driver-management-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.72fr) minmax(0, 1.28fr);
+  gap: 18px;
+  align-items: start;
 }
 
 .track-monitor-section {
@@ -1466,6 +1483,28 @@ h3 {
   grid-template-columns: repeat(2, 1fr);
 }
 
+.driver-create-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 4px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.driver-create-form .driver-team-field,
+.driver-create-form button {
+  grid-column: 1 / -1;
+}
+
+.driver-list-heading {
+  margin: 22px 0 14px;
+}
+
+.driver-list-heading p {
+  margin: 0;
+}
+
 .manual-race-form label:first-child,
 .manual-race-form button,
 .form-message {
@@ -1488,6 +1527,22 @@ h3 {
   margin: 0;
   color: var(--color-gold);
   font-size: 0.98rem;
+}
+
+.driver-editor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.driver-team-name {
+  margin: -6px 0 0;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .grid-demo {
@@ -2035,6 +2090,7 @@ h3 {
   .contact-layout,
   .dashboard-ops,
   .operations-grid,
+  .driver-management-layout,
   .track-monitor-layout,
   .shop-layout,
   .interactive-grid-layout,
@@ -2137,6 +2193,7 @@ h3 {
   .product-grid,
   .member-name-list,
   .manual-race-form,
+  .driver-create-form,
   .track-form,
   .compact-metrics,
   .analytics-kpi-grid,

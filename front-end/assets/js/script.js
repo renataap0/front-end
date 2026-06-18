@@ -30,6 +30,7 @@ const roles = {
     signedIn: "Sessao iniciada como Corredor.",
     chip: "Modo visualizacao",
     canAddRace: false,
+    canCreateDrivers: false,
     canEditDrivers: false,
     canDeleteRace: false,
     canManageTracks: false
@@ -41,6 +42,7 @@ const roles = {
     signedIn: "Sessao iniciada como Equipe.",
     chip: "Gestao de equipe",
     canAddRace: true,
+    canCreateDrivers: false,
     canEditDrivers: true,
     canDeleteRace: false,
     canManageTracks: true
@@ -52,6 +54,7 @@ const roles = {
     signedIn: "Sessao iniciada como Admin.",
     chip: "Controle total",
     canAddRace: true,
+    canCreateDrivers: true,
     canEditDrivers: true,
     canDeleteRace: true,
     canManageTracks: true
@@ -587,6 +590,7 @@ function normalizeApiDriver(driver) {
   return {
     id: driver.id,
     name: driver.name,
+    nationality: driver.nationality || "",
     carId: primaryCar?.id || driver.carId,
     car: primaryCar?.code || primaryCar?.model || driver.car || "Pacote livre",
     status: driver.status || "Titular",
@@ -845,14 +849,43 @@ async function updateDriverOnApi(driver, field, value) {
     };
   }
 
-  if (!["name", "status"].includes(field) || typeof window.updateDriverApi !== "function") {
+  if (!["name", "nationality", "number", "status"].includes(field) || typeof window.updateDriverApi !== "function") {
     throw new Error("Campo nao disponivel para gravacao.");
   }
 
   return {
     type: "driver",
-    data: await window.updateDriverApi(driver.id, { [field]: value })
+    data: await window.updateDriverApi(driver.id, {
+      [field]: field === "number" ? Number(value) : value
+    })
   };
+}
+
+async function persistDriverToApi(driver) {
+  if (!isApiAuthenticated() || typeof window.createDriverApi !== "function") {
+    throw new Error("Faca login como Admin para cadastrar o piloto.");
+  }
+
+  const persistedDriver = normalizeApiDriver(await window.createDriverApi({
+    name: driver.name,
+    nationality: driver.nationality || undefined,
+    number: Number(driver.number),
+    status: driver.status,
+    teamId: Number(driver.teamId)
+  }));
+  const drivers = upsertById(getDrivers(), persistedDriver)
+    .sort((first, second) => first.name.localeCompare(second.name, "pt-BR"));
+
+  saveDrivers(drivers);
+  return persistedDriver;
+}
+
+async function deleteDriverFromApi(driverId) {
+  if (!isApiAuthenticated() || typeof window.deleteDriverApi !== "function") {
+    throw new Error("Faca login como Admin para remover o piloto.");
+  }
+
+  await window.deleteDriverApi(driverId);
 }
 
 async function createOrderOnApi(order, cart, productsByName) {
@@ -1678,6 +1711,8 @@ function updateDashboardPermissions() {
   const manualAccessChip = document.getElementById("manualAccessChip");
   const teamAccessChip = document.getElementById("teamAccessChip");
   const manualRaceForm = document.getElementById("manualRaceForm");
+  const driverCreateForm = document.getElementById("driverCreateForm");
+  const driverCreateMessage = document.getElementById("driverCreateMessage");
   const raceFormMessage = document.getElementById("raceFormMessage");
 
   if (accessChip) {
@@ -1689,7 +1724,23 @@ function updateDashboardPermissions() {
   }
 
   if (teamAccessChip) {
-    teamAccessChip.textContent = role.canEditDrivers ? "Edicao liberada" : "Consulta operacional";
+    teamAccessChip.textContent = role.canCreateDrivers
+      ? "Cadastro e edicao liberados"
+      : role.canEditDrivers
+        ? "Edicao liberada"
+        : "Consulta operacional";
+  }
+
+  if (driverCreateForm) {
+    Array.from(driverCreateForm.elements).forEach((element) => {
+      element.disabled = !role.canCreateDrivers;
+    });
+  }
+
+  if (driverCreateMessage) {
+    driverCreateMessage.textContent = role.canCreateDrivers
+      ? "Preencha os dados para incluir um novo piloto no banco."
+      : "Somente o perfil Admin pode cadastrar novos pilotos.";
   }
 
   if (!manualRaceForm) {
@@ -1739,13 +1790,28 @@ function renderDriverEditors() {
   const role = getRoleConfig();
   const drivers = getDrivers();
   const disabledAttribute = role.canEditDrivers ? "" : "disabled";
+  const canDeleteDriver = document.body.dataset.page === "drivers" && role.canCreateDrivers;
 
   driverEditorGrid.innerHTML = drivers.map((driver, index) => `
     <article class="driver-editor">
-      <h5>Corredor ${index + 1}</h5>
+      <div class="driver-editor-heading">
+        <h5>${driver.number ? `#${escapeHTML(driver.number)} · ` : ""}Corredor ${index + 1}</h5>
+        ${canDeleteDriver
+          ? `<button class="table-action danger" type="button" data-delete-driver="${Number(driver.id)}" data-driver-name="${escapeAttribute(driver.name)}">Remover</button>`
+          : ""}
+      </div>
+      <p class="driver-team-name">${escapeHTML(driver.team || "Equipe nao informada")}</p>
       <label>
         <span>Nome</span>
         <input type="text" value="${escapeAttribute(driver.name)}" data-driver-index="${index}" data-driver-field="name" ${disabledAttribute}>
+      </label>
+      <label>
+        <span>Nacionalidade</span>
+        <input type="text" value="${escapeAttribute(driver.nationality || "")}" data-driver-index="${index}" data-driver-field="nationality" ${disabledAttribute}>
+      </label>
+      <label>
+        <span>Numero</span>
+        <input type="text" inputmode="numeric" maxlength="3" value="${escapeAttribute(driver.number || "")}" data-driver-index="${index}" data-driver-field="number" ${disabledAttribute}>
       </label>
       <label>
         <span>Carro</span>
@@ -1782,7 +1848,26 @@ function setupDriverEditor() {
     const drivers = getDrivers();
     const driver = drivers[index];
     const previousValue = driver[field];
-    const nextValue = event.target.value;
+    let nextValue = event.target.value;
+
+    if (field === "name" || field === "nationality") {
+      nextValue = titleCaseWords(sanitizeName(nextValue).trim());
+      event.target.value = nextValue;
+    }
+
+    if (field === "number") {
+      nextValue = getDigits(nextValue).slice(0, 3);
+      event.target.value = nextValue;
+    }
+
+    if (!nextValue) {
+      event.target.value = previousValue || "";
+
+      if (driverSaveMessage) {
+        driverSaveMessage.textContent = "O campo informado nao pode ficar vazio.";
+      }
+      return;
+    }
 
     event.target.disabled = true;
 
@@ -1826,6 +1911,146 @@ function setupDriverEditor() {
   }
 
   driverEditorGrid.addEventListener("change", updateDriverData);
+  driverEditorGrid.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-delete-driver]");
+
+    if (!button || !getRoleConfig().canCreateDrivers) {
+      return;
+    }
+
+    const driverId = Number(button.dataset.deleteDriver);
+    const driverName = button.dataset.driverName || "este piloto";
+
+    if (!driverId || !window.confirm(`Remover ${driverName}? Esta acao nao pode ser desfeita.`)) {
+      return;
+    }
+
+    button.disabled = true;
+
+    if (driverSaveMessage) {
+      driverSaveMessage.textContent = `Removendo ${driverName}...`;
+    }
+
+    try {
+      await deleteDriverFromApi(driverId);
+      saveDrivers(getDrivers().filter((driver) => Number(driver.id) !== driverId));
+      await syncApiData();
+      renderDriverEditors();
+      updateDashboardMetrics();
+      renderGridPage();
+      renderAnalyticsPage();
+
+      if (driverSaveMessage) {
+        driverSaveMessage.textContent = `${driverName} foi removido com sucesso.`;
+      }
+    } catch (error) {
+      button.disabled = false;
+
+      if (driverSaveMessage) {
+        driverSaveMessage.textContent = error.status === 409
+          ? `${driverName} possui corridas ou voltas vinculadas e nao pode ser removido.`
+          : `Nao foi possivel remover ${driverName}: ${error.message}`;
+      }
+    }
+  });
+}
+
+async function setupDriverCreateForm() {
+  const driverCreateForm = document.getElementById("driverCreateForm");
+  const driverTeamSelect = document.getElementById("driverTeamSelect");
+  const driverCreateMessage = document.getElementById("driverCreateMessage");
+
+  if (!driverCreateForm || !driverTeamSelect) {
+    return;
+  }
+
+  setupRaceInputMasks(driverCreateForm);
+
+  try {
+    const teams = typeof window.getTeamsApi === "function"
+      ? await window.getTeamsApi()
+      : await callApi("/teams");
+
+    driverTeamSelect.innerHTML = Array.isArray(teams) && teams.length
+      ? teams.map((team) => (
+        `<option value="${Number(team.id)}">${escapeHTML(team.name)}</option>`
+      )).join("")
+      : '<option value="">Nenhuma equipe disponivel</option>';
+  } catch (error) {
+    driverTeamSelect.innerHTML = '<option value="">Nao foi possivel carregar</option>';
+
+    if (driverCreateMessage && getRoleConfig().canCreateDrivers) {
+      driverCreateMessage.textContent = `Nao foi possivel carregar as equipes: ${error.message}`;
+    }
+  }
+
+  if (!getRoleConfig().canCreateDrivers) {
+    Array.from(driverCreateForm.elements).forEach((element) => {
+      element.disabled = true;
+    });
+  }
+
+  driverCreateForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!getRoleConfig().canCreateDrivers) {
+      driverCreateMessage.textContent = "Somente o perfil Admin pode cadastrar novos pilotos.";
+      return;
+    }
+
+    const nameInput = driverCreateForm.elements.name;
+    const nationalityInput = driverCreateForm.elements.nationality;
+    const numberInput = driverCreateForm.elements.number;
+    const statusInput = driverCreateForm.elements.status;
+    const teamInput = driverCreateForm.elements.teamId;
+    const submitButton = driverCreateForm.querySelector('button[type="submit"]');
+
+    nameInput.value = titleCaseWords(sanitizeName(nameInput.value).trim());
+    nationalityInput.value = titleCaseWords(sanitizeName(nationalityInput.value).trim());
+    numberInput.value = getDigits(numberInput.value).slice(0, 3);
+
+    if (!nameInput.value) {
+      nameInput.focus();
+      driverCreateMessage.textContent = "Informe o nome completo do piloto.";
+      return;
+    }
+
+    if (!Number(numberInput.value)) {
+      numberInput.focus();
+      driverCreateMessage.textContent = "Informe um numero de piloto maior que zero.";
+      return;
+    }
+
+    if (!Number(teamInput.value)) {
+      teamInput.focus();
+      driverCreateMessage.textContent = "Selecione a equipe do piloto.";
+      return;
+    }
+
+    try {
+      submitButton.disabled = true;
+      driverCreateMessage.textContent = "Cadastrando piloto no banco...";
+
+      const persistedDriver = await persistDriverToApi({
+        name: nameInput.value,
+        nationality: nationalityInput.value,
+        number: numberInput.value,
+        status: statusInput.value,
+        teamId: teamInput.value
+      });
+
+      renderDriverEditors();
+      updateDashboardMetrics();
+      renderGridPage();
+      renderAnalyticsPage();
+      driverCreateForm.reset();
+      driverCreateMessage.textContent = `${persistedDriver.name} foi cadastrado com sucesso.`;
+    } catch (error) {
+      driverCreateMessage.textContent = `Nao foi possivel cadastrar o piloto: ${error.message}`;
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
 }
 
 function setupManualRaceForm() {
@@ -2102,11 +2327,12 @@ function upsertSeasonRoundFromManualRace(newRace) {
   saveSeason({ ...season2, rounds });
 }
 
-function setupDashboardPage() {
+async function setupDashboardPage() {
   updateDashboardPermissions();
   updateDashboardMetrics();
   renderDriverEditors();
   setupDriverEditor();
+  await setupDriverCreateForm();
   setupManualRaceForm();
   setupTrackMonitor();
   setupTrackCarForm();
@@ -3411,7 +3637,7 @@ async function initializeApp() {
 
   await syncApiData();
 
-  setupDashboardPage();
+  await setupDashboardPage();
   setupGridPage();
   setupAnalyticsPage();
   setupTracksPage();

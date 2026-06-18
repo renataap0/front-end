@@ -66,9 +66,18 @@ window.getAnalyticsApi = () => window.apiFetch("/analytics");
 window.getSeasonsApi = () => window.apiFetch("/seasons");
 window.getSeasonRoundLapsApi = (id) => window.apiFetch(`/season-rounds/${id}/laps`);
 
+window.createDriverApi = (payload) => window.apiFetch("/drivers", {
+  method: "POST",
+  body: JSON.stringify(payload)
+});
+
 window.updateDriverApi = (id, payload) => window.apiFetch(`/drivers/${id}`, {
   method: "PUT",
   body: JSON.stringify(payload)
+});
+
+window.deleteDriverApi = (id) => window.apiFetch(`/drivers/${id}`, {
+  method: "DELETE"
 });
 
 window.updateCarApi = (id, payload) => window.apiFetch(`/cars/${id}`, {
